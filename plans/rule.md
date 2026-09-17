@@ -97,3 +97,14 @@ Merge only when:
 - Remove duplication.
 - Prefer clarity over cleverness.
 - Keep `main` production ready.
+
+---
+
+# Agent Rules
+
+These rules apply to AI agents contributing to this repository.
+
+- RULE-AGENT-001: Never add co-authored commit trailers such as `Co-authored-by:`.
+- RULE-AGENT-002: Never use em dashes (`—`) in code, documentation, commit messages
+- RULE-AGENT-003: Never use emojis 
+- RULE-AGENT-004: Match the repository's writing style: concise, technical, and human.
