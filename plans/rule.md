@@ -108,3 +108,12 @@ These rules apply to AI agents contributing to this repository.
 - RULE-AGENT-002: Never use em dashes (`—`) in code, documentation, commit messages
 - RULE-AGENT-003: Never use emojis 
 - RULE-AGENT-004: Match the repository's writing style: concise, technical, and human.
+
+---
+
+# Project Workflow Rules
+
+- RULE-WORKFLOW-001: Update `checkpoint.md` before every push to latest state .
+- RULE-WORKFLOW-002: Record every newly discovered or anomaly in `plans/anomaly.md`.
+- RULE-WORKFLOW-003: Document any future proposed enhancements in `plans/future.md`.
+- RULE-WORKFLOW-004: Keep `checkpoint.md`, `anomaly.md`, and `future.md` current before opening a PR.
