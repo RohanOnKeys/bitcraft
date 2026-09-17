@@ -1,2 +1,2 @@
 # bitcraft
-AI-Powered Monitoring &amp; Analysis of Bitcoin Transaction Traffic Software
+AI-Powered Monitoring & Analysis of Bitcoin Transaction Traffic Software
