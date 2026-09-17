@@ -1,2 +1,133 @@
-# bitcraft
-AI-Powered Monitoring & Analysis of Bitcoin Transaction Traffic Software
+# BitCraft
+
+AI Powered Monitoring & Analysis of Bitcoin Transaction Traffic Software
+
+BitCraft is an offline Bitcoin intelligence platform that correlates blockchain transactions with network metadata to generate explainable investigative leads. It ingests bulk transaction datasets, builds an entity graph linking wallets, IPs, and transactions, applies AI and graph analysis to detect suspicious behavior, and presents prioritized alerts through an investigation dashboard.
+
+The project is designed for Linux and operates entirely offline on synthetic datasets modeled after real Bitcoin transaction and P2P network activity.
+
+---
+
+## Background
+
+Bitcoin's pseudonymous peer to peer architecture enables legitimate financial activity, but it also allows ransomware payments, darknet market proceeds, extortion, and money laundering to move across the network with limited traditional financial oversight.
+
+BitCraft addresses this challenge by combining blockchain layer data with network layer observations. Instead of analyzing transactions in isolation, it reconstructs relationships between wallets, IP addresses, and transaction timing to uncover suspicious patterns that would otherwise remain hidden.
+
+---
+
+## Features
+
+- Bulk ingestion of CSV, JSON, and XML datasets
+- Bitcoin transaction and metadata parsing
+- Entity graph connecting wallets, IPs, ports, and transactions
+- AI powered anomaly detection
+- Wallet and transaction clustering
+- Explainable alerts with confidence scores
+- Investigation dashboard for link analysis
+- Fully offline Linux compatible workflow
+
+---
+
+## Dataset
+
+BitCraft works with synthetic datasets modeled on real Bitcoin transaction fields.
+
+### Supported Fields
+
+- `timestamp`
+- `src_ip`
+- `dst_ip`
+- `src_port`
+- `dst_port`
+- `txid`
+- `input_addresses[]`
+- `output_addresses[]`
+- `input_amounts[]`
+- `output_amounts[]`
+- `fee`
+- `script_type`
+- `geo_country`
+- `asn`
+
+GeoIP enrichment uses downloadable open source GeoIP databases.
+
+---
+
+## Objectives
+
+- Ingest and parse bulk Bitcoin transaction metadata.
+- Correlate network layer and blockchain layer data.
+- Build relationships between wallets, IP addresses, and transactions.
+- Detect suspicious behavior using AI and machine learning.
+- Generate explainable alerts with confidence scores.
+- Provide investigators with a clear view of suspicious entities through a dashboard.
+
+---
+
+## AI and Graph Analysis
+
+BitCraft combines graph analytics with machine learning rather than relying solely on rule based detection.
+
+Planned capabilities include:
+
+- Entity clustering
+- Transaction anomaly detection
+- Suspicious transaction chain identification
+- Temporal behavior analysis
+- Wallet relationship discovery
+- Network correlation between blockchain activity and observed IP metadata
+
+Every alert includes supporting evidence and a confidence score.
+
+---
+
+## Project Structure
+
+```text
+bitcraft/
+├── datasets/
+├── docs/
+├── plans/
+├── src/
+├── tests/
+└── README.md
+```
+
+---
+
+## Getting Started
+
+Project setup instructions will be added as development progresses.
+
+---
+
+## Expected Output
+
+BitCraft produces:
+
+- Parsed and correlated transaction data
+- Entity relationship graphs
+- Ranked suspicious wallets and transactions
+- Explainable AI generated alerts
+- Investigation dashboard
+
+---
+
+## Tech Stack
+
+Planned technologies include:
+
+- Python
+- NetworkX
+- FastAPI
+- PostgreSQL
+- Redis
+- GeoIP databases
+- Machine learning libraries
+
+---
+
+## License
+
+License information will be added when the project reaches a stable release.
