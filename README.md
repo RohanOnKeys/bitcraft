@@ -2,7 +2,7 @@
 
 AI Powered Monitoring & Analysis of Bitcoin Transaction Traffic Software
 
-BitCraft is an offline Bitcoin intelligence platform that correlates blockchain transactions with network metadata to generate explainable investigative leads. It ingests bulk transaction datasets, builds an entity graph linking wallets, IPs, and transactions, applies AI and graph analysis to detect suspicious behavior, and presents prioritized alerts through an investigation dashboard.
+BitCraft is an offline Bitcoin intelligence platform that correlates blockchain transactions with network metadata to generate explainable investigative leads. It ingests bulk transaction datasets, builds an entity graph linking wallets, IPs, and transactions, applies AI and graph analysis to detect suspicious behavior, and presents prioritized alerts through a terminal-based investigation dashboard (TUI).
 
 The project is designed for Linux and operates entirely offline on synthetic datasets modeled after real Bitcoin transaction and P2P network activity.
 
@@ -24,7 +24,7 @@ BitCraft addresses this challenge by combining blockchain layer data with networ
 - AI powered anomaly detection
 - Wallet and transaction clustering
 - Explainable alerts with confidence scores
-- Investigation dashboard for link analysis
+- Terminal-based investigation dashboard (TUI) for link analysis
 - Fully offline Linux compatible workflow
 
 ---
@@ -61,7 +61,7 @@ GeoIP enrichment uses downloadable open source GeoIP databases.
 - Build relationships between wallets, IP addresses, and transactions.
 - Detect suspicious behavior using AI and machine learning.
 - Generate explainable alerts with confidence scores.
-- Provide investigators with a clear view of suspicious entities through a dashboard.
+- Provide investigators with a clear view of suspicious entities through a terminal-based dashboard.
 
 ---
 
@@ -110,7 +110,7 @@ BitCraft produces:
 - Entity relationship graphs
 - Ranked suspicious wallets and transactions
 - Explainable AI generated alerts
-- Investigation dashboard
+- Terminal-based investigation dashboard (TUI)
 
 ---
 
@@ -125,6 +125,7 @@ Planned technologies include:
 - Redis
 - GeoIP databases
 - Machine learning libraries
+- Terminal UI framework (to be decided)
 
 ---
 

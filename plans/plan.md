@@ -149,7 +149,7 @@ The implementation must follow this staged pipeline.
 | 5 - AI/ML Detection | `ml/anomaly_model.py`, `ml/graph_builder.py` | Isolation Forest anomaly scoring + Louvain communities |
 | 6 - Explainability | `ml/explainability.py` | SHAP TreeExplainer + provenance-tagged evidence |
 | 7 - Alerting & Ranking | `ml/ranker.py` | Fuse scores into `composite_score` and write alerts |
-| 8 - Dashboard | `frontend/` | Ranked alerts, graph explorer, evidence panel |
+| 8 - Dashboard | `tui/` | Ranked alerts, graph explorer, evidence panel |
 | 9 - Packaging | `docker-compose.yml` | One-command fully offline execution |
 
 ---
@@ -433,13 +433,17 @@ Redis must:
 
 No ML code runs at request time.
 
-The frontend reads pre-computed results only.
+The TUI reads pre-computed results only.
 
 ---
 
-# 11. Frontend Architecture
+# 11. Terminal Interface (TUI)
 
-## 11.1 Dashboard
+BitCraft ships as a terminal user interface, not a web dashboard. This
+keeps the whole system runnable inside the offline Linux container with
+no browser, no web server, and no client-side build step.
+
+## 11.1 Dashboard View
 
 Purpose:
 
@@ -449,11 +453,11 @@ Purpose:
 
 Components:
 
-- `KpiSummary`
-- `FilterSidebar`
-- `AlertTable`
+- KPI summary panel
+- Filter panel
+- Alert list view
 
-## 11.2 Alert Detail
+## 11.2 Alert Detail View
 
 Purpose:
 
@@ -464,30 +468,26 @@ Purpose:
 
 Components:
 
-- `AlertDetailPanel`
-- Embedded `GraphExplorer`
+- Alert detail panel
+- Embedded graph view
 
-## 11.3 Graph Explorer
+## 11.3 Graph Explorer View
 
 Purpose:
 
 - Full link-analysis view
-- Pan and zoom
+- Pan and navigate via keyboard
 - Visualize by score/community
 
 Component:
 
-- `GraphExplorer`
+- Graph explorer view
 
-### Frontend stack
+### TUI stack
 
-- React
-- Vite
-- Cytoscape.js **or** react-force-graph
-- React Query
-- Recharts
+Framework: to be decided. Candidates include Textual and Rich.
 
-Synthetic-layer fields must be visually distinguished from real Elliptic-derived values using a badge or tooltip indicating that they are modeled.
+Synthetic-layer fields must be visually distinguished from real Elliptic-derived values using a text marker or color indicating that they are modeled.
 
 ---
 
@@ -536,20 +536,13 @@ bitcraft/
 │   ├── requirements.txt
 │   └── Dockerfile
 │
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── api/client.js
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
+├── tui/
+│   └── (structure to be decided, pending TUI framework choice)
 │
 ├── tests/
 │   ├── ml/
 │   ├── backend/
-│   └── frontend/
+│   └── tui/
 │
 ├── .gitignore
 ├── docker-compose.yml
@@ -570,9 +563,7 @@ bitcraft/
 | Backend | FastAPI + Uvicorn | Async, offline-friendly API |
 | Persistent store | PostgreSQL | Alerts, graph metadata, evidence |
 | Cache / job status | Redis | Hot alert views and pipeline tracking |
-| Frontend | React + Vite | Dashboard application |
-| Graph visualization | Cytoscape.js or react-force-graph | Interactive link analysis |
-| Charts | Recharts | KPI/data visualizations |
+| Terminal UI | To be decided (candidates: Textual, Rich) | Dashboard, alert detail, and graph explorer, entirely in the terminal |
 | Packaging | Docker + Docker Compose | One-command offline execution |
 | Testing | Pytest | ML, ingestion, feature pipeline and model tests |
 
@@ -656,7 +647,7 @@ Deliverables:
 - API skeleton
 - Database schema
 
-### Frontend
+### Terminal Interface (TUI)
 
 Owns:
 
@@ -664,7 +655,7 @@ Owns:
 
 Deliverable:
 
-- Static mockups
+- TUI wireframes and framework choice
 
 ### Documentation and PM Team Member
 
@@ -711,11 +702,11 @@ Deliverables:
 - Score fusion
 - Evidence strings
 
-### Frontend
+### Terminal Interface (TUI)
 
 Deliverable:
 
-- Alert table wired to API
+- Alert list wired to API
 
 ### Documentation and PM Team Member
 
@@ -755,12 +746,12 @@ Deliverables:
 - Full `/alerts` endpoints live
 - Full `/graph` endpoints live
 
-### Frontend
+### Terminal Interface (TUI)
 
 Deliverables:
 
-- Graph Explorer
-- Provenance badges
+- Graph Explorer view
+- Provenance markers
 
 ### Documentation and PM Team Member
 
@@ -793,7 +784,7 @@ flowchart TD
     J --> K[Ranked Alerts]
     K --> L[PostgreSQL and Redis]
     L --> M[FastAPI]
-    M --> N[React Dashboard]
+    M --> N[Terminal Dashboard]
     N --> O[Graph Explorer and Provenance-Aware Evidence]
 ```
 
