@@ -1,0 +1,3 @@
+# TUI dependencies (tui/). Not installed yet.
+textual>=0.80
+httpx>=0.27

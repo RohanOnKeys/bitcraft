@@ -125,7 +125,7 @@ Planned technologies include:
 - Redis
 - GeoIP databases
 - Machine learning libraries
-- Terminal UI framework (to be decided)
+- Textual (terminal UI framework)
 
 ---
 

@@ -485,7 +485,13 @@ Component:
 
 ### TUI stack
 
-Framework: to be decided. Candidates include Textual and Rich.
+Framework: Textual (Python).
+
+### Visual Theme
+
+Pitch black. Near-black background, high-contrast light text, a single
+muted gold accent for headers and primary signal, deep red reserved for
+high-severity alerts. See `docs/tui_design.md` for the full palette.
 
 Synthetic-layer fields must be visually distinguished from real Elliptic-derived values using a text marker or color indicating that they are modeled.
 
@@ -537,7 +543,20 @@ bitcraft/
 │   └── Dockerfile
 │
 ├── tui/
-│   └── (structure to be decided, pending TUI framework choice)
+│   ├── app.py
+│   ├── theme.tcss
+│   ├── api_client.py
+│   ├── screens/
+│   │   ├── dashboard.py
+│   │   ├── alert_detail.py
+│   │   └── graph_explorer.py
+│   ├── widgets/
+│   │   ├── kpi_summary.py
+│   │   ├── filter_panel.py
+│   │   ├── alert_list.py
+│   │   ├── alert_detail_panel.py
+│   │   └── graph_view.py
+│   └── requirements.txt
 │
 ├── tests/
 │   ├── ml/
@@ -563,7 +582,7 @@ bitcraft/
 | Backend | FastAPI + Uvicorn | Async, offline-friendly API |
 | Persistent store | PostgreSQL | Alerts, graph metadata, evidence |
 | Cache / job status | Redis | Hot alert views and pipeline tracking |
-| Terminal UI | To be decided (candidates: Textual, Rich) | Dashboard, alert detail, and graph explorer, entirely in the terminal |
+| Terminal UI | Textual | Dashboard, alert detail, and graph explorer, entirely in the terminal |
 | Packaging | Docker + Docker Compose | One-command offline execution |
 | Testing | Pytest | ML, ingestion, feature pipeline and model tests |
 

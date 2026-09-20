@@ -46,6 +46,18 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
   mixed elliptic_tx_id / synthetic_transaction_id node namespace back
   onto elliptic_tx_id for the master table join, without merging the two
   ID types.
+- Chose Textual as the TUI framework and a pitch-black, Dark Knight
+  themed palette (near-black background, muted gold accent, deep red
+  reserved for high-severity alerts only). Documented the choice and
+  the full color table in `docs/tui_design.md`, and updated
+  `plans/plan.md` sections 11, 12, and 13 to match. Scaffolded `tui/`:
+  `app.py` (entry point), `theme.tcss`, `api_client.py` (stub, every
+  call raises `NotImplementedError`), three screen stubs
+  (`dashboard.py`, `alert_detail.py`, `graph_explorer.py`), five widget
+  stubs (`kpi_summary.py`, `filter_panel.py`, `alert_list.py`,
+  `alert_detail_panel.py`, `graph_view.py`), and `requirements.txt`.
+  Widgets render placeholder text only; none are wired to the backend.
+  `tests/tui/` created, empty.
 
 ## Not Done
 
@@ -57,14 +69,16 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
   `explainability.py`, and `pipeline.py` are still stubs
   (`raise NotImplementedError`).
 - No database migrations generated.
-- TUI framework not chosen, `tui/` not scaffolded.
+- `tui/` widgets are placeholders; `tui/api_client.py` is unimplemented.
+  The app has not been run.
 - Nothing in `ml/` has been run against real data yet.
 
 ## Next
 
 - Implement `ml/feature_pipeline.py` (assemble the coverage-aware
   feature matrix) and `ml/anomaly_model.py` (Isolation Forest scoring).
-- Choose the TUI framework and scaffold `tui/`.
+- Wire `tui/api_client.py` to the backend once `backend/` endpoints have
+  real logic, then wire the widgets to it.
 - Generate the first Alembic migration from the ORM models.
 - Once the dataset is actually added to `datasets/`, verify the inferred
   column names in `ml/data_loader.py` and `ml/graph_builder.py` against
