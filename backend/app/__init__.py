@@ -1,0 +1,1 @@
+"""BitCraft FastAPI application package."""

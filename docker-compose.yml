@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bitcraft
+      POSTGRES_PASSWORD: bitcraft
+      POSTGRES_DB: bitcraft
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  ml:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgresql://bitcraft:bitcraft@postgres:5432/bitcraft
+      REDIS_URL: redis://redis:6379/0
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+      - ml
+    environment:
+      DATABASE_URL: postgresql://bitcraft:bitcraft@postgres:5432/bitcraft
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:

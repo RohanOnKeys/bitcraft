@@ -1,0 +1,7 @@
+"""Redis connection for cached alert views and pipeline job status."""
+
+import redis
+
+from app.core.config import settings
+
+redis_client = redis.Redis.from_url(settings.redis_url, decode_responses=True)

@@ -1,0 +1,11 @@
+# ML pipeline dependencies (ml/). Not installed yet.
+pandas>=2.2
+pyarrow>=17.0
+numpy>=1.26
+networkx>=3.3
+python-louvain>=0.16
+scikit-learn>=1.5
+shap>=0.46
+pyyaml>=6.0
+geoip2>=4.8
+pytest>=8.3

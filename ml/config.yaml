@@ -1,0 +1,15 @@
+# BitCraft ML pipeline configuration.
+# See plans/plan.md sections 6.2 and 7 for the source values.
+
+isolation_forest:
+  n_estimators: 300
+  max_samples: "auto"
+  contamination: 0.022
+
+score_fusion:
+  anomaly_score_weight: 0.60
+  community_illicit_ratio_weight: 0.25
+  network_ip_signal_weight: 0.15
+
+explainability:
+  top_n_shap: 100
