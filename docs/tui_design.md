@@ -1,78 +1,93 @@
 # BitCraft TUI Design
 
-Status: draft. Scaffolded only, not implemented.
+Status: demo-backed shell through threat detection. Graph canvas and
+analyst tooling still pending.
 
 ## Why a Terminal Interface
 
 BitCraft is an offline, air-gapped system (`plans/plan.md` section 1). A
 terminal interface needs no browser, no web server, and no client-side
 build step, so it drops cleanly into the same offline Linux container as
-the rest of the pipeline. This replaces the React/Vite web dashboard the
-plan originally described.
+the rest of the pipeline.
 
 ## Framework
 
-[Textual](https://textual.textualize.io/), a Python TUI framework. It
-fits the existing Python/FastAPI stack directly, and its widget and
-screen model maps onto the dashboard/alert-detail/graph-explorer split
-already defined in `plans/plan.md` section 11.
+Textual (Python). Floor: `textual>=5.0` for `App.MODES` / `switch_mode`.
 
 ## Visual Theme: Pitch Black
-
-Dark Knight vibes: near-black everywhere, no gradients, no soft grays
-pretending to be a "light dark mode." One accent color carries all
-signal.
 
 | Role | Color | Use |
 |---|---|---|
 | Background | `#000000` | Screen, header, footer |
-| Panel background | `#050505` | Panel bodies, just barely lifted off black |
-| Border | `#1a1a1a` | Panel outlines, barely visible until focused |
+| Panel background | `#050505` | Panel bodies |
+| Border | `#1a1a1a` | Panel outlines |
 | Primary text | `#e6e6e6` | Body text |
-| Accent (bat-signal) | `#d4af37` | Headers, medium-severity alerts, focus state |
-| High severity | `#b3261e` | High-severity alerts only, bold |
-| Muted | `#7a7a7a` | Footer, low-severity alerts |
+| Accent | `#d4af37` | Headers, medium severity, focus |
+| High severity | `#b3261e` | High/critical alerts only |
+| Muted | `#7a7a7a` | Footer, low severity |
 | Modeled badge | `#6a6a6a`, italic | Synthetic-layer values |
 
-The full stylesheet is `tui/theme.tcss`. The rule that matters most:
-color is reserved for meaning (severity, focus, provenance), not
-decoration. A screen with no alerts should look almost entirely black.
+## Provider layer
+
+Screens read only from `tui/store.py`. The store holds a `DataProvider`:
+
+- `DemoProvider` - deterministic seed 42, plan-aligned coverage numbers
+- `ApiProvider` - FastAPI via `tui/api_client.py`
+- Selection: `BITCRAFT_DATA_SOURCE=auto|demo|api`, or `--demo` / `--api`
+
+`auto` probes `/health` (1.5s) and falls back to demo on failure.
+
+## Provenance glyphs
+
+- `~` prefix and `.modeled-badge` = modeled / synthetic-layer value
+- `n/a` = no network coverage (never show `0` / `0.00` as risk)
+- `DEMO DATA` badge in the header whenever the demo provider is active
+
+## Severity (display-only)
+
+| Tier | Composite score |
+|---|---|
+| critical | >= 0.80 |
+| high | >= 0.60 |
+| medium | >= 0.40 |
+| low | < 0.40 |
 
 ## Screens
 
-- **Dashboard** (`tui/screens/dashboard.py`) - KPI summary, filter panel,
-  ranked alert list. Default screen on launch.
-- **Alert Detail** (`tui/screens/alert_detail.py`) - scores, SHAP
-  reasons, evidence text, and an embedded mini graph view for one
-  transaction.
-- **Graph Explorer** (`tui/screens/graph_explorer.py`) - full-screen
-  link-analysis view, keyboard pan/navigate, colored by score or
-  community.
+| Screen | Key | Role |
+|---|---|---|
+| Splash | launch | ASCII logo |
+| Boot | after Enter | Real provider stages, then dashboard |
+| Dashboard | `d` | KPIs, filters, alerts, preview |
+| Threats | `t` | Posture, queue, drivers, communities |
+| Graph | `g` | Placeholder explorer (canvas later) |
+| Alert detail | Enter on row | Scores, evidence, SHAP |
 
-## Widgets
+## Key map
 
-- `KpiSummary` - GET `/stats/summary`
-- `FilterPanel` - drives the query params for `AlertList`
-- `AlertList` - a Textual `DataTable`, GET `/alerts`
-- `AlertDetailPanel` - GET `/alerts/{tx_id}`
-- `GraphView` - GET `/graph/{tx_id}`, or the full graph with no ID
+| Key | Action |
+|---|---|
+| Enter | Splash: boot; table: detail |
+| d | Dashboard |
+| t | Threats |
+| g | Graph |
+| Esc | Home (splash) |
+| q | Quit |
+| n / p | Next / previous alert page |
+| s | Cycle sort |
+| f / x | Focus filters / reset |
+| r | Refresh |
+| a / c / n | Threat driver filters |
+| w | Threat network-evidence toggle |
 
-## Data Flow
+## Run
 
-The TUI only reads pre-computed results through `tui/api_client.py`,
-which calls the FastAPI backend. No ML code runs in the TUI process
-(`plans/plan.md` section 10.3).
+```text
+pip install -r tui/requirements.txt
+python -m tui.app --demo
+python -m tui.app --api
+python -m tui.app
+```
 
-## Provenance
-
-Synthetic-layer values must never render as if they were observed facts
-about a real transaction (`plans/plan.md` section 2.3). The `.modeled-
-badge` style in `tui/theme.tcss` (dim, italic) is the one place that
-distinction shows up on screen; every evidence field that came from the
-synthetic layer gets it.
-
-## Current State
-
-Scaffolded: app entry point, three screen stubs, five widget stubs, the
-theme stylesheet, and an unimplemented `api_client.py`. Nothing is wired
-to a running backend and the app has not been run.
+Minimum terminal size: 100x30. Below that a guard panel is shown.
+`BITCRAFT_ASCII=1` forces plain ASCII glyphs.

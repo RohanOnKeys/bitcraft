@@ -1,3 +1,4 @@
-# TUI dependencies (tui/). Not installed yet.
-textual>=0.80
+# TUI dependencies (tui/).
+# textual>=5.0 required for App.MODES / switch_mode used by navigation.
+textual>=5.0
 httpx>=0.27
