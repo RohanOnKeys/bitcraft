@@ -98,7 +98,29 @@ bitcraft/
 
 ## Getting Started
 
-Project setup instructions will be added as development progresses.
+### Terminal UI (demo mode)
+
+```text
+pip install -r tui/requirements.txt
+python -m tui.app --demo
+```
+
+Other data sources:
+
+```text
+python -m tui.app --api
+python -m tui.app
+```
+
+`--demo` forces synthetic data. `--api` talks to FastAPI at
+`http://localhost:8000` (override with `--api-url`). Default `auto`
+probes `/health` and falls back to demo.
+
+Keys: Enter (boot/detail), d dashboard, t threats, g graph, Esc home, q quit.
+
+Demo mode always shows a `DEMO DATA` badge. It is not live pipeline output.
+
+Minimum terminal size: 100 columns by 30 rows.
 
 ---
 
