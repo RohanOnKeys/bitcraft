@@ -94,6 +94,10 @@ def load_elliptic_features(datasets_dir: Path) -> pd.DataFrame:
         df, "elliptic_features.csv", [ELLIPTIC_TX_ID, "timestep", "class_label"]
     )
     df[ELLIPTIC_TX_ID] = df[ELLIPTIC_TX_ID].astype("int64")
+    df["class_label"] = pd.to_numeric(
+        df["class_label"].replace({"unknown": pd.NA, "Unknown": pd.NA, "": pd.NA}),
+        errors="coerce",
+    ).astype("float64")
     return df
 
 
@@ -145,7 +149,10 @@ def load_relationships(datasets_dir: Path) -> pd.DataFrame:
     source_tx_id / target_tx_id stay within a single relationship-type
     namespace per edge; they are not assumed to be elliptic_tx_id values.
     """
-    df = pd.read_csv(datasets_dir / "relationships.csv")
+    df = pd.read_csv(
+        datasets_dir / "relationships.csv",
+        dtype={"source_tx_id": "string", "target_tx_id": "string"},
+    )
     _validate_shape(df, "relationships.csv")
     _require_columns(
         df, "relationships.csv", ["relationship_id", "source_tx_id", "target_tx_id"]
@@ -163,8 +170,19 @@ def _add_synthetic_layer(
     nulls, fills missing numeric fields with a neutral sentinel plus a
     missing indicator, and leaves missing categorical fields null.
     """
-    linked = mapping.merge(transactions, on=SYNTHETIC_TX_ID, how="left")
-    master = master.merge(linked, on=ELLIPTIC_TX_ID, how="left")
+    linked = mapping[[ELLIPTIC_TX_ID, SYNTHETIC_TX_ID, "mapping_type", "mapping_method", "data_source"]].merge(
+        transactions,
+        on=SYNTHETIC_TX_ID,
+        how="left",
+        suffixes=("", "_synthetic"),
+    )
+
+    overlap = set(master.columns) & set(linked.columns)
+    overlap = {c for c in overlap if c not in {ELLIPTIC_TX_ID, SYNTHETIC_TX_ID}}
+    if overlap:
+        linked = linked.drop(columns=sorted(overlap))
+
+    master = master.merge(linked, on=ELLIPTIC_TX_ID, how="left", suffixes=("", "_synthetic"))
     master["has_synthetic_layer"] = master[SYNTHETIC_TX_ID].notna()
 
     for column in SYNTHETIC_NUMERIC_FIELDS:
