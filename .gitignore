@@ -31,3 +31,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Dataset (Kaggle: rosalinnayak/bitcoin-transaction-traffic) and pipeline outputs
+datasets/*.csv
+datasets/*.zip
+ml/artifacts/
+backend/*.db
