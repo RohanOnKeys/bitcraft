@@ -8,7 +8,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core import redis_client
-from app.models import Alert, AlertEvidence, Transaction
+from app.models import Alert, AlertEvidence, Entity, Transaction, TxMetadata
+from app.services.entity_service import tx_metadata_dict
 
 MAX_PAGE = 500
 SORTS = {
@@ -104,4 +105,12 @@ def get_alert_detail(db: Session, tx_id: int) -> dict | None:
     detail["evidence_text"] = evidence.evidence_text if evidence else ""
     detail["evidence_items"] = evidence.evidence_items if evidence else None
     detail["shap_reasons"] = evidence.shap_reasons if evidence else None
+    meta = db.scalars(select(TxMetadata).where(TxMetadata.elliptic_tx_id == tx_id)).first()
+    if meta is not None:
+        detail["metadata"] = tx_metadata_dict(meta)
+        wallet = db.get(Entity, meta.entity_id)
+        if wallet is not None:
+            detail["metadata"]["entity_rank"] = wallet.rank
+            detail["metadata"]["entity_risk"] = wallet.risk_score
+            detail["metadata"]["entity_addresses"] = wallet.n_addresses
     return detail

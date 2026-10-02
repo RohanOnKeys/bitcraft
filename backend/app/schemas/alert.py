@@ -51,3 +51,5 @@ class AlertDetail(AlertSummary):
     shap_reasons: list[ShapReason] | None = None
     evidence_items: list[EvidenceItem] | None = None
     evidence_text: str
+    # Linked network/blockchain metadata (txid, IPs, ports, GeoIP, wallet).
+    metadata: dict | None = None
