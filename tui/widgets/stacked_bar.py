@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from rich.style import Style
+from rich.text import Text
 from textual.widget import Widget
+
+from tui.widgets.charts import CRIMSON, MUTED, ORANGE, YELLOW
 
 
 class StackedBar(Widget):
@@ -31,25 +35,32 @@ class StackedBar(Widget):
         self.low = low
         self.bar_width = width
 
-    def render(self) -> str:
+    def render(self) -> Text:
         total = self.critical + self.high + self.medium + self.low
-        if total <= 0:
-            return "-" * self.bar_width
         parts = [
-            (self.critical, "#b3261e"),
-            (self.high, "#b3261e"),
-            (self.medium, "#d4af37"),
-            (self.low, "#7a7a7a"),
+            ("critical", self.critical, CRIMSON),
+            ("high", self.high, ORANGE),
+            ("medium", self.medium, YELLOW),
+            ("low", self.low, "#5a5046"),
         ]
-        chars: list[str] = []
-        remaining = self.bar_width
-        for i, (count, color) in enumerate(parts):
-            if i == len(parts) - 1:
-                n = remaining
-            else:
-                n = int(round(count / total * self.bar_width))
-                n = min(n, remaining)
+        legend_txt = Text(no_wrap=True, end="")
+        for name, count, color in parts:
+            legend_txt.append("  ■ ", Style(color=color))
+            legend_txt.append(f"{name} ", Style(color=MUTED))
+            legend_txt.append(f"{count:,}", Style(color=color, bold=True))
+        width = max(10, self.size.width - legend_txt.cell_len - 1)
+        bar = Text(no_wrap=True, end="")
+        if total <= 0:
+            bar.append("─" * width, Style(color=MUTED))
+        else:
+            remaining = width
+            for i, (_, count, color) in enumerate(parts):
+                n = remaining if i == len(parts) - 1 else min(remaining, round(count / total * width))
+                # Keep tiny tiers visible.
+                if count and n == 0 and remaining:
+                    n = 1
                 remaining -= n
-            if n > 0:
-                chars.append(f"[{color}]{'#' * n}[/]")
-        return "".join(chars) if chars else "-" * self.bar_width
+                bar.append("█" * n, Style(color=color))
+        bar.append(" ")
+        bar.append_text(legend_txt)
+        return bar
