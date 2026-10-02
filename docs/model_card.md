@@ -37,6 +37,27 @@ held-out timesteps:
 The team chose (2026-10-02) to add the supervised risk model and keep the
 Isolation Forest as a small, label-free secondary signal.
 
+## Metadata model and wallet scoring
+
+The challenge-format metadata layer (IPs, ports, GeoIP country and ASN,
+addresses, amounts, fee, script type) feeds a second HistGradientBoosting
+classifier (`ml/metadata_model.py`) under the same label window and
+out-of-fold scoring. Where a transaction has metadata, its score replaces
+the hand-built network signal in the fusion; elsewhere the old signal (or
+0 with `n/a`) stays.
+
+Wallets are common-input clusters scored by
+`0.6 * max + 0.4 * shrunk mean` of their transactions' metadata scores;
+the shrinkage pulls one-transaction wallets toward the base rate so
+sustained behaviour ranks first. SHAP reasons come from each wallet's
+riskiest transaction.
+
+On held-out timesteps the metadata model reaches AUC 0.969 (unsupervised
+forest on the same features: 0.874), and 98% of the top 100 wallet alerts
+are illicit owners. The layer is synthetic with planted typologies, so
+these numbers measure recovery of those typologies, not real-world
+accuracy.
+
 ## Evaluation protocol and leakage guards
 
 - Temporal split, the standard Elliptic protocol: labels from timesteps 1-34
