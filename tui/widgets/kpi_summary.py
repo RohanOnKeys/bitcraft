@@ -2,12 +2,26 @@
 
 from __future__ import annotations
 
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.widget import Widget
 from textual.widgets import Static
 
+from tui.helpers import stub_charts
 from tui.helpers.format import format_int, format_pct
+from tui.widgets.charts import sparkline
+
+# Stub 16-point trends under each KPI until the API serves history.
+_TREND = stub_charts.alerts_by_timestep
+SPARK_SERIES = {
+    "#kpi-tx": _TREND(21)[:16],
+    "#kpi-alerts": _TREND(22)[18:34],
+    "#kpi-critical": _TREND(3)[18:34],
+    "#kpi-labeled": _TREND(24)[:16],
+    "#kpi-network": _TREND(25)[30:46],
+    "#kpi-pipeline": _TREND(26)[8:24],
+}
 
 
 class KpiSummary(Widget):
@@ -34,7 +48,10 @@ class KpiSummary(Widget):
 
         def set_cell(cid: str, value: str, label: str, extra_class: str | None = None) -> None:
             cell = self.query_one(cid, Static)
-            cell.update(f"{value}\n{label}")
+            text = Text.from_markup(f"{value}\n[#8a8078]{label}[/]\n")
+            text.append_text(sparkline(SPARK_SERIES[cid]))
+            text.justify = "center"
+            cell.update(text)
             if extra_class:
                 cell.add_class(extra_class)
 
@@ -64,8 +81,8 @@ class KpiSummary(Widget):
         # Network coverage is synthetic-layer derived: modeled marker.
         set_cell(
             "#kpi-network",
-            f"[italic #6a6a6a]~{format_pct(stats.network_coverage_pct)}[/]",
+            f"[italic #ffb6c1]~{format_pct(stats.network_coverage_pct)}[/]",
             "network",
         )
         pipe = pipeline.status if pipeline else "--"
-        set_cell("#kpi-pipeline", f"[bold #7a7a7a]{pipe}[/]", "pipeline")
+        set_cell("#kpi-pipeline", f"[bold #fa8072]{pipe}[/]", "pipeline")
