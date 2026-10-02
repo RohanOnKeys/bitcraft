@@ -26,11 +26,9 @@ from tui.widgets.chart_panels import DRIVER_COLOURS
 from tui.widgets.charts import CHROME, CRIMSON, MUTED, ORANGE, PINK, SALMON, YELLOW
 from tui.widgets.graph_view import GraphView, graph_legend
 from tui.widgets.header_bar import HeaderBar
-from tui.widgets.mascot import NATIVE_WIDTH, Mascot
 
-# Below these sizes the frog gives its room back to the charts.
-MASCOT_MIN_WIDTH = 150
-MASCOT_MIN_HEIGHT = 46
+# Terminal width at which the side column widens.
+WIDE_SIDE_MIN_WIDTH = 150
 
 
 class GraphExplorerScreen(Screen):
@@ -55,7 +53,15 @@ class GraphExplorerScreen(Screen):
                         id="graph-stats",
                         classes="panel",
                     )
-                    yield Mascot("happy", art_width=NATIVE_WIDTH, idle=True, id="graph-mascot")
+                    yield DonutChart(
+                        [(n, v, c) for (n, v), c in zip(
+                            stub_charts.driver_mix(), (SALMON, CHROME, PINK)
+                        )],
+                        label="0.87",
+                        sublabel="score",
+                        id="graph-drivers",
+                        classes="panel",
+                    )
             with Horizontal(id="graph-bottom"):
                 yield TimestepChart(id="graph-timeline", classes="panel")
                 yield DonutChart(
@@ -65,15 +71,6 @@ class GraphExplorerScreen(Screen):
                     label="4,483",
                     sublabel="alerts",
                     id="graph-severity",
-                    classes="panel",
-                )
-                yield DonutChart(
-                    [(n, v, c) for (n, v), c in zip(
-                        stub_charts.driver_mix(), (SALMON, CHROME, PINK)
-                    )],
-                    label="0.87",
-                    sublabel="score",
-                    id="graph-drivers",
                     classes="panel",
                 )
                 yield CommunityBars(id="graph-communities", classes="panel")
@@ -168,7 +165,5 @@ class GraphExplorerScreen(Screen):
 
     def _fit(self) -> None:
         w, h = self.size.width, self.size.height
-        self.query_one("#graph-mascot").display = w >= MASCOT_MIN_WIDTH and h >= MASCOT_MIN_HEIGHT
-        self.query_one("#graph-side").styles.width = NATIVE_WIDTH + 2 if w >= MASCOT_MIN_WIDTH else 40
+        self.query_one("#graph-side").styles.width = 58 if w >= WIDE_SIDE_MIN_WIDTH else 40
         self.query_one("#graph-bottom-2").display = h >= 40
-        self.query_one("#graph-drivers").display = w >= 160
