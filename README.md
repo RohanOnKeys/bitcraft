@@ -96,6 +96,8 @@ The problem statement calls for a synthetic dataset modeled on real Bitcoin P2P 
 
 Counts, amounts, fees, timestamps and labels come from the base dataset. Wallets, addresses, routable IPs and ports are synthesised, with laundering typologies planted (with noise) on illicit activity: address reuse, peeling chains, CoinJoin-style mixing, Tor and hosting egress, multi-country IP hopping and round payouts. The 50,000 records ship as CSV, JSON and XML, with GeoIP-enriched versions from `python -m ml.ingest FILE --enrich --out FILE`.
 
+Every dataset (base tables, metadata and the DB-IP Lite GeoIP databases) is attached to each [GitHub release](https://github.com/RohanOnKeys/bitcraft/releases) and fetched with `python -m ml.dataset download`, no Kaggle account needed. To run with no download at all, `python -m ml.synthetic` generates a fully synthetic dataset in the same format.
+
 ![Wallets: address clusters with their IPs, ports, GeoIP country and ASN](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/wallets.png)
 
 ---
@@ -118,13 +120,12 @@ On the metadata layer the model reaches AUC 0.969, wallet clustering purity is 0
 
 ## Running the full system
 
-From a source checkout, with the dataset CSVs in `datasets/`:
+From a source checkout:
 
 ```text
 pip install -r requirements.txt -r backend/requirements.txt
 pip install -e .
-python -m ml.geoip download            # one time: DB-IP Lite country and ASN databases
-python -m ml.metadata_generator        # challenge-format metadata (CSV, JSON, XML)
+python -m ml.dataset download          # every dataset, about 235 MB, SHA-256 verified
 python -m ml.pipeline                  # about 5 minutes; writes ml/artifacts/
 cd backend && python -m app.loader     # loads the results into backend/bitcraft.db
 bitcraft                               # starts the API and opens the TUI
@@ -165,7 +166,7 @@ backend/      FastAPI service and the artifact loader
 packages/     PyPI and Chocolatey packaging, air-gapped bundle builder
 docs/         manual, writeup, model card, provenance, screenshots
 tests/        ML, backend and TUI tests
-datasets/     local data (not in git)
+datasets/     local data (not in git; `python -m ml.dataset download`)
 ```
 
 ---
@@ -189,5 +190,5 @@ datasets/     local data (not in git)
   Copyright 2026 The BitCraft Authors: Rohan Pattanayak, Jagadish Prasad Pattanaik, Shreya Mishra, Shreya Mohanty, Ashutosh Badapanda, and Rosalin Nayak. See [NOTICE](https://github.com/RohanOnKeys/bitcraft/blob/main/NOTICE).
 - **Datasets & Schemas**: Dataset pipelines, schemas, and synthetic metadata layers are licensed under [Apache License 2.0](https://github.com/RohanOnKeys/bitcraft/blob/main/datasets/LICENSE).<br>
   Copyright 2026 Ashutosh Badapanda. See [datasets/NOTICE](https://github.com/RohanOnKeys/bitcraft/blob/main/datasets/NOTICE).
-- **Third-Party Data**: IP geolocation by [DB-IP](https://db-ip.com) (CC BY 4.0). The Elliptic-derived dataset is distributed separately and subject to its upstream research license.
+- **Third-Party Data**: IP geolocation by [DB-IP](https://db-ip.com) (CC BY 4.0). The Elliptic-derived dataset is distributed separately, as release archives, and subject to its upstream research license.
 

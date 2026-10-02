@@ -21,6 +21,21 @@ with synthetically generated transaction and P2P network layers.
 
 Full attributions: `datasets/NOTICE`.
 
+## Distribution
+
+The data is attached to the GitHub release as three zip archives, each
+carrying `datasets/LICENSE` and `datasets/NOTICE`:
+
+| Archive | Contents |
+| --- | --- |
+| `bitcraft-base.zip` | The five base tables |
+| `bitcraft-metadata.zip` | Metadata in CSV, JSON and XML, GeoIP-enriched versions, `txid_map.csv`, `generator_truth.csv` |
+| `bitcraft-geoip.zip` | DB-IP Lite country and ASN databases, IP pool cache |
+
+`python -m ml.dataset download` fetches them and verifies each against the
+SHA-256 in `ml/references/dataset_manifest.json`. `python -m ml.synthetic`
+generates an entirely synthetic dataset in the same format instead.
+
 ## Tables
 
 See `plans/plan.md` section 3.1 for shapes, primary keys, and linkage.
@@ -50,5 +65,6 @@ type), written as CSV, JSON and XML under `datasets/metadata/`.
 
 Country and ASN come from DB-IP Lite (country and ASN, MMDB format), used
 offline after a one-time download (`python -m ml.geoip download`).
-IP geolocation by DB-IP (https://db-ip.com), licensed CC BY 4.0. The
-databases are not redistributed in this repository.
+IP geolocation by DB-IP (<https://db-ip.com>), licensed CC BY 4.0. The
+databases are not in the git repository; the release archive
+`bitcraft-geoip.zip` redistributes them with this attribution.

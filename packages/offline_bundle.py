@@ -9,6 +9,7 @@ at setup time:
     images.tar       Docker images (ml, backend, postgres, redis), if Docker
                      is available and `docker compose build` has run
     datasets/        the dataset CSVs, generated metadata and GeoIP databases
+                     (fetched with `python -m ml.dataset download` if absent)
     repo.tar.gz      this repository (git archive of HEAD)
     install.sh       offline installer for the target machine
 
@@ -96,6 +97,8 @@ def main(argv: list[str] | None = None) -> None:
     with open(out / "repo.tar.gz", "wb") as handle:
         run(["git", "archive", "--format=tar.gz", "HEAD"], cwd=REPO, stdout=handle)
 
+    # A fresh clone has no data yet: fetch the release archives first.
+    run([sys.executable, "-m", "ml.dataset", "download"], cwd=REPO)
     datasets = out / "datasets"
     shutil.copytree(REPO / "datasets", datasets, ignore=shutil.ignore_patterns(".gitkeep", "*.zip"))
 

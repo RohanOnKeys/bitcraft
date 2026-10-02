@@ -23,16 +23,22 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
   Apache 2.0 license with NOTICE.
 - Docs: user manual, technical writeup, model card, dataset provenance,
   submission checklist (`docs/submission.md`), screenshots in `docs/images/`.
-- Generated metadata, plain and GeoIP-enriched, published privately on
-  Kaggle as `rohanllm/bitcraft-bitcoin-metadata`.
+- Generated metadata, plain and GeoIP-enriched, on Kaggle as
+  `rohanllm/bitcraft-bitcoin-metadata`.
+- Datasets packaged: base tables, metadata and GeoIP attached to GitHub
+  release `v0.1.3` as zip archives; `python -m ml.dataset download`
+  fetches and SHA-256 verifies them (hashes pinned in
+  `ml/references/dataset_manifest.json`); `python -m ml.synthetic`
+  generates a fully synthetic dataset with no download.
 
-- Released: `bitcraft` 0.1.2 on PyPI (https://pypi.org/project/bitcraft/)
-  and GitHub release `v0.1.2`; README is the PyPI description; author
-  credits corrected (Jagadish Prasad Pattanaik).
+- Released: `bitcraft` 0.1.3 on PyPI (<https://pypi.org/project/bitcraft/>)
+  and GitHub release `v0.1.3` with the dataset archives; README is the PyPI
+  description; author credits corrected (Jagadish Prasad Pattanaik,
+  Ashutosh Badapanda); dataset sources credited in `datasets/NOTICE`.
 
 ## Current verification status
 
-- Tests: 78 passed (`python -m pytest tests`).
+- Tests: 82 passed (`python -m pytest tests`).
 - Linux: `docker compose up --build` verified end to end (pipeline in a
   Linux container, PostgreSQL load in 66 s, API serving the TUI); results
   identical to the Windows run.
@@ -40,8 +46,8 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
   precision@500 0.994.
 - Metadata model held-out AUC 0.969; wallet alerts illicit at top 100 /
   500: 0.98 / 0.96; clustering purity 0.999.
-- Dataset and artifacts are local only (`datasets/`, `ml/artifacts/`,
-  git-ignored).
+- Dataset and artifacts are not in git (`datasets/`, `ml/artifacts/`);
+  the data comes from the release archives.
 
 ## Not Done
 

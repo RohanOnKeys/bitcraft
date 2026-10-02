@@ -36,8 +36,10 @@ dataset. The GeoIP-enriched version, with `src_country`, `src_asn`,
 python -m ml.ingest datasets/metadata/bitcoin_metadata.csv --enrich --out datasets/metadata/bitcoin_metadata_enriched.csv
 ```
 
-Both are published privately on Kaggle as
-`rohanllm/bitcraft-bitcoin-metadata`.
+Both are on Kaggle as `rohanllm/bitcraft-bitcoin-metadata`. Every dataset
+(base tables, metadata, GeoIP) is attached to the GitHub release and
+fetched with `python -m ml.dataset download`; `python -m ml.synthetic`
+generates a fully synthetic one with no download.
 
 ## Headline results
 
