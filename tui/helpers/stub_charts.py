@@ -27,6 +27,7 @@ class StubCluster:
     angle: float  # position around the focus (radians)
     risk: float
     size: int
+    label: str | None = None  # hub caption; defaults to C<community_id>
 
 
 @dataclass
@@ -35,6 +36,7 @@ class StubNetwork:
     clusters: list[StubCluster]
     nodes: list[StubNode]
     edges: list[tuple[int, int, str]] = field(default_factory=list)  # kind: hub|member|bridge
+    focus_label: str | None = None  # caption for the focus node; defaults to "tx <id>"
 
 
 def stub_network(focus_tx: int = 10000021, n_clusters: int = 5, seed: int = 7) -> StubNetwork:

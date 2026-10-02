@@ -15,7 +15,7 @@ from rich.text import Text
 from textual.widget import Widget
 
 from tui.helpers.stub_charts import StubCluster, StubNetwork, StubNode, stub_network
-from tui.providers.models import ProviderError, Subgraph
+from tui.providers.models import LinkGraph, ProviderError, Subgraph
 from tui.widgets.charts import (
     CHROME,
     CRIMSON,
@@ -81,6 +81,51 @@ def network_from_subgraph(sub: Subgraph, focus_tx: int) -> StubNetwork:
             edges.append((a, b, "bridge"))
             tree |= {(a, b), (b, a)}
     return StubNetwork(focus_tx, clusters, nodes, edges)
+
+
+def network_from_link_graph(graph: LinkGraph) -> StubNetwork:
+    """Lay a wallet link graph out as wallet -> transactions -> addresses/IPs.
+
+    The wallet is the focus, its riskiest transactions are hubs, and each
+    hub's addresses and source IP orbit it as members.
+    """
+    root = next((n for n in graph.nodes if n.kind == "entity"), None)
+    by_id = {n.id: n for n in graph.nodes}
+    txs = sorted((n for n in graph.nodes if n.kind == "tx"), key=lambda n: -(n.score or 0.0))[:MAX_HUBS]
+    neighbours: dict[str, list[str]] = {}
+    for e in graph.edges:
+        neighbours.setdefault(e.source, []).append(e.target)
+        neighbours.setdefault(e.target, []).append(e.source)
+    clusters: list[StubCluster] = []
+    nodes = [StubNode(0, -1, "focus", 0.0, 0.0, (root.score or 0.0) if root else 0.0)]
+    edges: list[tuple[int, int, str]] = []
+    placed: dict[str, int] = {root.id: 0} if root else {}
+    for c, tx in enumerate(txs):
+        clusters.append(StubCluster(0, 2 * math.pi * c / max(1, len(txs)), round(tx.score or 0.0, 2), 0, label=tx.label))
+        hub = StubNode(len(nodes), c, "hub", 0.0, 0.0, tx.score or 0.0)
+        nodes.append(hub)
+        placed[tx.id] = hub.node_id
+        edges.append((0, hub.node_id, "hub"))
+    for c, tx in enumerate(txs):
+        members = [m for m in neighbours.get(tx.id, []) if m not in placed and m in by_id][:MAX_MEMBERS]
+        clusters[c].size = len(members)
+        for m, member_id in enumerate(members):
+            member = by_id[member_id]
+            risk = 0.9 if member.kind == "ip" else 0.5
+            node = StubNode(len(nodes), c, "member", 2 * math.pi * m / max(1, len(members)),
+                            0.6 + 0.4 * ((m * 7) % 5) / 4, risk)
+            nodes.append(node)
+            placed[member_id] = node.node_id
+            edges.append((placed[tx.id], node.node_id, "member"))
+    # Addresses shared by several transactions become bridges.
+    tree = {(a, b) for a, b, _ in edges} | {(b, a) for a, b, _ in edges}
+    for e in graph.edges:
+        a, b = placed.get(e.source), placed.get(e.target)
+        if a is not None and b is not None and (a, b) not in tree and a != 0 and b != 0:
+            edges.append((a, b, "bridge"))
+            tree |= {(a, b), (b, a)}
+    label = root.label if root else "wallet"
+    return StubNetwork(0, clusters, nodes, edges, focus_label=label)
 ROTATE_PER_FRAME = 0.0035
 PACKET_FRAMES = 26
 
@@ -140,6 +185,12 @@ class GraphView(Widget):
 
     def _tick(self) -> None:
         self._frame += 1
+        self.refresh()
+
+    def set_network(self, net: StubNetwork) -> None:
+        """Show a prepared network (e.g. a wallet link graph); no fetching."""
+        self.elliptic_tx_id = None
+        self._net = net
         self.refresh()
 
     def set_focus_tx(self, tx_id: int | None) -> None:
@@ -224,13 +275,13 @@ class GraphView(Widget):
                 pulse = (math.sin(self._frame / 3.0) + 1) / 2
                 canvas.put(col, row, "◆", Style(color=mix(YELLOW, CRIMSON, pulse), bold=True))
                 if self._labels:
-                    canvas.put(col + 2, row, f"tx {net.focus_tx}",
+                    canvas.put(col + 2, row, net.focus_label or f"tx {net.focus_tx}",
                                Style(color=YELLOW, bold=True))
             elif n.kind == "hub":
                 canvas.put(col, row, "◉", Style(color=colour(n), bold=True))
                 if self._labels:
                     c = net.clusters[n.cluster]
-                    canvas.put(col + 2, row, f"C{c.community_id}",
+                    canvas.put(col + 2, row, c.label or f"C{c.community_id}",
                                Style(color=colour(n), bold=True))
                     canvas.put(col + 2, row + 1, f"{c.risk:.2f}", Style(color=MUTED))
             else:
