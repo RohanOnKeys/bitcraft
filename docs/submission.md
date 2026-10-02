@@ -52,9 +52,15 @@ model AUC 0.969; 98% of the top 100 wallet alerts are illicit owners
 
 ```text
 pip install bitcraft && bitcraft demo          # TUI with demo data, any OS
+
+git clone https://github.com/RohanOnKeys/bitcraft && cd bitcraft
+python -m ml.dataset download                  # every dataset, SHA-256 verified
 docker compose up --build                      # full stack on Linux: pipeline, PostgreSQL, API
 bitcraft                                       # TUI against the API
 ```
+
+How the parts fit together, with diagrams of the pipeline, data model and
+entity graph: `docs/architecture.md`.
 
 ## Offline guarantee
 

@@ -13,6 +13,32 @@ explainable investigative leads with a dashboard.
 
 ## Approach
 
+```mermaid
+flowchart LR
+    subgraph NL["Network layer"]
+        IP["src / dst IP, port,<br/>timing"]
+        GEO["GeoIP country, ASN,<br/>Tor and hosting flags"]
+    end
+    subgraph BL["Blockchain layer"]
+        TXID["txid, amounts, fee"]
+        ADDR["input / output<br/>addresses"]
+        GRAPH["transaction graph,<br/>203,769 nodes"]
+    end
+    IP --> GEO
+    GEO --> COR{{"Correlate<br/>by txid"}}
+    TXID --> COR
+    ADDR --> WAL["Wallet clusters<br/>common-input ownership"]
+    WAL --> COR
+    GRAPH --> COMM["Louvain<br/>communities"]
+    COR --> ML["Risk model, metadata model,<br/>Isolation Forest"]
+    COMM --> ML
+    ML --> FUSE["Composite score"]
+    FUSE --> LEADS["Ranked leads with<br/>SHAP reasons and evidence"]
+```
+
+Full diagrams (pipeline stages, data relationships, database, entity
+graph, deployment): `docs/architecture.md`.
+
 ### Data
 
 Two layers, linked through `mapping.csv` and `txid_map.csv`:
