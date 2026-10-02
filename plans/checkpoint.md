@@ -17,15 +17,21 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
   `/metadata`, `/pipeline/metrics`; optional Redis cache.
 - TUI reads the live API: dashboard, threats, graph explorer, wallets and
   alert detail; frogs only on the splash and boot screens.
-- `bitcraft` CLI opens a sized terminal window; pip and Chocolatey
-  packaging; Apache 2.0 license with NOTICE.
-- Docs: user manual, technical writeup, model card, dataset provenance.
-- Generated metadata published privately on Kaggle as
-  `rohanllm/bitcraft-bitcoin-metadata`.
+- `bitcraft` CLI opens a sized terminal window; the installable package is
+  `bitcraft` (wheel verified in a clean environment); pip and Chocolatey
+  packaging; air-gapped Linux bundle (`packages/offline_bundle.py`);
+  Apache 2.0 license with NOTICE.
+- Docs: user manual, technical writeup, model card, dataset provenance,
+  submission checklist (`docs/submission.md`), screenshots in `docs/images/`.
+- Generated metadata, plain and GeoIP-enriched, published privately on
+  Kaggle as `rohanllm/bitcraft-bitcoin-metadata`.
 
 ## Current verification status
 
-- Tests: 75 passed (`python -m pytest tests`).
+- Tests: 78 passed (`python -m pytest tests`).
+- Linux: `docker compose up --build` verified end to end (pipeline in a
+  Linux container, PostgreSQL load in 66 s, API serving the TUI); results
+  identical to the Windows run.
 - Held-out timesteps 35 to 49: composite AUC 0.899, precision@100 1.00,
   precision@500 0.994.
 - Metadata model held-out AUC 0.969; wallet alerts illicit at top 100 /
@@ -35,9 +41,8 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
 
 ## Not Done
 
-- PyPI and Chocolatey uploads (packages build and install locally).
-- Full `docker compose up --build` run (compose config and the PostgreSQL
-  load were verified separately).
+- PyPI and Chocolatey uploads (packages build, pass `twine check` and
+  install cleanly).
 - Items in `plans/future.md`.
 
 ## Next
