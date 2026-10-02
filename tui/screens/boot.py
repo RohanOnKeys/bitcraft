@@ -18,6 +18,7 @@ from tui.providers.factory import create_provider
 from tui.providers.models import ProviderError
 from tui.widgets.charts import ramp
 from tui.widgets.logo import Logo
+from tui.widgets.mini_frog import MiniFrog
 from tui.widgets.mascot import NATIVE_WIDTH, Mascot
 
 SHIMMER_WIDTH = 48
@@ -56,7 +57,10 @@ class BootScreen(Screen):
                 yield Logo(show_tagline=False, id="boot-logo")
             yield Static("", id="boot-shimmer")
             yield ProgressBar(total=len(BOOT_STAGES), id="boot-progress", show_eta=False)
-            yield RichLog(id="boot-log", markup=True, highlight=False)
+            with Horizontal(id="boot-log-row"):
+                yield MiniFrog(seed=10, classes="mini-frog")
+                yield RichLog(id="boot-log", markup=True, highlight=False)
+                yield MiniFrog(seed=11, classes="mini-frog")
             yield Static("", id="boot-hint")
         yield Footer()
 
