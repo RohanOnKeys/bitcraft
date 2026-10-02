@@ -131,7 +131,7 @@ cd backend && python -m app.loader     # loads the results into backend/bitcraft
 bitcraft                               # starts the API and opens the TUI
 ```
 
-With no `DATABASE_URL`, the API uses a local SQLite file and Redis is optional. `docker compose up --build` runs the same pipeline on PostgreSQL and Redis and serves the API on port 8000. Interactive API docs are at `http://localhost:8000/docs`.
+With no `DATABASE_URL`, the API uses a local SQLite file and Redis is optional. `docker compose up --build` runs the same pipeline on PostgreSQL and Redis and serves the API on port 8000; on a fresh clone it downloads the datasets first. Interactive API docs are at `http://localhost:8000/docs`.
 
 API: `/alerts`, `/alerts/{tx_id}`, `/graph/{tx_id}?depth=`, `/communities`, `/communities/{id}`, `/entities`, `/entities/{id}`, `/entities/{id}/graph`, `/addresses/{address}`, `/ips/{ip}`, `/metadata/{tx_id}`, `/stats/summary`, `/threats/overview`, `/pipeline/status`, `/pipeline/metrics`.
 

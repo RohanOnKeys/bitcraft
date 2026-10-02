@@ -19,7 +19,8 @@ services:
     ports:
       - "6379:6379"
 
-  # Offline ML run: reads datasets/*.csv, writes Parquet artifacts, exits.
+  # Offline ML run: reads datasets/, writes Parquet artifacts, exits. A fresh
+  # clone has no data yet, so the first run downloads it into ./datasets.
   ml:
     build:
       context: .
@@ -29,7 +30,7 @@ services:
     environment:
       REDIS_URL: redis://redis:6379/0
     volumes:
-      - ./datasets:/app/datasets:ro
+      - ./datasets:/app/datasets
       - artifacts:/app/ml/artifacts
 
   # Loads the artifacts into PostgreSQL, then serves the read-only API.

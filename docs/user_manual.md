@@ -26,7 +26,10 @@ pip install -r requirements.txt -r backend/requirements.txt
 ```
 
 Docker users can skip the Python setup: `docker compose up --build` runs
-the pipeline, loads PostgreSQL and serves the API on port 8000.
+the pipeline, loads PostgreSQL and serves the API on port 8000. On the
+first run it downloads any missing datasets into `datasets/` (about
+235 MB, SHA-256 verified); later runs, and the air-gapped bundle, use the
+files already there.
 
 ---
 
