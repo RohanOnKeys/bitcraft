@@ -185,7 +185,9 @@ datasets/     local data (not in git)
 
 ## License
 
-- **Code & Application**: BitCraft is open source under the [Apache License 2.0](https://github.com/RohanOnKeys/bitcraft/blob/main/LICENSE). Copyright 2026 The BitCraft Authors: Rohan Pattanayak, Jagadish Prasad Pattanaik, Shreya Mishra, Shreya Mohanty, Ashutosh Badapada, and Rosalin Nayak. See [NOTICE](https://github.com/RohanOnKeys/bitcraft/blob/main/NOTICE).
-- **Datasets & Schemas**: Dataset pipelines, schemas, and synthetic metadata layers are licensed under [Apache License 2.0](https://github.com/RohanOnKeys/bitcraft/blob/main/datasets/LICENSE). Copyright 2026 Ashutosh Badapada. See [datasets/NOTICE](https://github.com/RohanOnKeys/bitcraft/blob/main/datasets/NOTICE).
+- **Code & Application**: BitCraft is open source under the [Apache License 2.0](https://github.com/RohanOnKeys/bitcraft/blob/main/LICENSE).<br>
+  Copyright 2026 The BitCraft Authors: Rohan Pattanayak, Jagadish Prasad Pattanaik, Shreya Mishra, Shreya Mohanty, Ashutosh Badapanda, and Rosalin Nayak. See [NOTICE](https://github.com/RohanOnKeys/bitcraft/blob/main/NOTICE).
+- **Datasets & Schemas**: Dataset pipelines, schemas, and synthetic metadata layers are licensed under [Apache License 2.0](https://github.com/RohanOnKeys/bitcraft/blob/main/datasets/LICENSE).<br>
+  Copyright 2026 Ashutosh Badapanda. See [datasets/NOTICE](https://github.com/RohanOnKeys/bitcraft/blob/main/datasets/NOTICE).
 - **Third-Party Data**: IP geolocation by [DB-IP](https://db-ip.com) (CC BY 4.0). The Elliptic-derived dataset is distributed separately and subject to its upstream research license.
 
