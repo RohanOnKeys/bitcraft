@@ -279,7 +279,8 @@ class GraphView(Widget):
                                Style(color=YELLOW, bold=True))
             elif n.kind == "hub":
                 canvas.put(col, row, "◉", Style(color=colour(n), bold=True))
-                if self._labels:
+                # Short panels: hub captions would overlap, keep only the glyphs.
+                if self._labels and rows >= 14:
                     c = net.clusters[n.cluster]
                     canvas.put(col + 2, row, c.label or f"C{c.community_id}",
                                Style(color=colour(n), bold=True))
