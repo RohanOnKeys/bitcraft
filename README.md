@@ -8,6 +8,12 @@ The project is designed for Linux and operates entirely offline on synthetic dat
 
 ---
 
+![BitCraft dashboard](docs/images/dashboard.png)
+
+| Wallets | Graph explorer |
+| --- | --- |
+| ![Wallets](docs/images/wallets.png) | ![Graph explorer](docs/images/graph.png) |
+
 ## Background
 
 Bitcoin's pseudonymous peer to peer architecture enables legitimate financial activity, but it also allows ransomware payments, darknet market proceeds, extortion, and money laundering to move across the network with limited traditional financial oversight.
