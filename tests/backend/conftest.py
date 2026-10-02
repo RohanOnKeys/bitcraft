@@ -28,7 +28,7 @@ def client():
     from ml.pipeline import run_pipeline
     from tests.ml.fixture_data import write_fixture_dataset
 
-    data = write_fixture_dataset(_TMP / "data")
+    data = write_fixture_dataset(_TMP / "data", metadata=True)
     run_pipeline(data, REPO / "ml" / "config.yaml", _TMP / "artifacts", strict=False)
     load_artifacts(_TMP / "artifacts")
     with TestClient(app) as test_client:
