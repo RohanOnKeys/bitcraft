@@ -9,6 +9,18 @@ Status: draft. Owned by the Documentation and PM team member, due Milestone 1.
 Combines real, labeled Bitcoin transaction data from the Elliptic dataset
 with synthetically generated transaction and P2P network layers.
 
+## Sources
+
+| Source | Used for | License |
+| --- | --- | --- |
+| [Bitcoin Transaction traffic](https://www.kaggle.com/datasets/rosalinnayak/bitcoin-transaction-traffic) (Rosalin Nayak, Kaggle) | The five base tables | Apache 2.0 (`datasets/LICENSE`) |
+| [Elliptic Data Set](https://www.kaggle.com/datasets/ellipticco/elliptic-data-set) | Transaction features, labels and graph | Upstream research terms |
+| [blockchain-etl/bitcoin-etl](https://github.com/blockchain-etl/bitcoin-etl) | Transaction field schema (txid, inputs, outputs, values, fees, timestamps) | MIT |
+| Schnoering and Vazirgiannis, [Bitcoin Research with a Transaction Graph Dataset](https://arxiv.org/abs/2411.10325) (2024) | Transaction graph research dataset | CC BY-SA 4.0 |
+| [DB-IP Lite](https://db-ip.com) | GeoIP country and ASN | CC BY 4.0 |
+
+Full attributions: `datasets/NOTICE`.
+
 ## Tables
 
 See `plans/plan.md` section 3.1 for shapes, primary keys, and linkage.
