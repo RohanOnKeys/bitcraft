@@ -217,6 +217,20 @@ Requirements:
 - `contamination=0.022` is used as a scoring prior matching the known illicit rate.
 - The class label must never be used as a model training target.
 
+> **Revised 2026-10-02.** On the real dataset the Isolation Forest ranks
+> illicit transactions below random (held-out AUC 0.20): illicit activity is
+> unusually uniform, not unusual. The team added Branch C below and keeps
+> this branch as a small, label-free secondary signal. See
+> `docs/model_card.md`.
+
+## 6.2b Branch C - Supervised risk model
+
+HistGradientBoosting classifier (`ml/risk_model.py`) on the same feature
+matrix, trained on labeled transactions with timestep <= 34
+(`label_window.train_max_timestep`). Rows inside that window are scored
+out-of-fold (GroupKFold by timestep); timesteps 35-49 are the holdout that
+precision@k is reported on. Community illicit ratios use the same window.
+
 ---
 
 ## 6.3 Branch B - Graph + Louvain
@@ -248,10 +262,14 @@ Use the following composite score:
 
 ```text
 composite_score =
-    0.60 * anomaly_score
-  + 0.25 * community_illicit_ratio
-  + 0.15 * network_ip_signal
+    0.65 * risk_model_score
+  + 0.05 * anomaly_score
+  + 0.20 * community_illicit_ratio
+  + 0.10 * network_ip_signal
 ```
+
+(Revised 2026-10-02 from 0.60 / 0.25 / 0.15 without a risk model; see
+section 6.2b.)
 
 ### Network signal
 
