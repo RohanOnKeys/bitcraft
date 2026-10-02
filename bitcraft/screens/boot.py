@@ -18,7 +18,6 @@ from bitcraft.providers.factory import create_provider
 from bitcraft.providers.models import ProviderError
 from bitcraft.widgets.chart import ramp
 from bitcraft.widgets.logo import Logo
-from bitcraft.widgets.mini_frog import MiniFrog
 from bitcraft.widgets.mascot import NATIVE_WIDTH, Mascot
 
 SHIMMER_WIDTH = 48
@@ -57,10 +56,7 @@ class BootScreen(Screen):
                 yield Logo(show_tagline=False, id="boot-logo")
             yield Static("", id="boot-shimmer")
             yield ProgressBar(total=len(BOOT_STAGES), id="boot-progress", show_eta=False)
-            with Horizontal(id="boot-log-row"):
-                yield MiniFrog(seed=10, classes="mini-frog")
-                yield RichLog(id="boot-log", markup=True, highlight=False)
-                yield MiniFrog(seed=11, classes="mini-frog")
+            yield RichLog(id="boot-log", markup=True, highlight=False)
             yield Static("", id="boot-hint")
         yield Footer()
 

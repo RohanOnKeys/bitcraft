@@ -1,12 +1,11 @@
 """Splash screen: brand-first landing with the ASCII logo."""
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Static
 
 from bitcraft.widgets.logo import Logo
-from bitcraft.widgets.mini_frog import MiniFrog
 from bitcraft.widgets.mascot import NATIVE_WIDTH, Mascot
 
 # Below this height the frog would crowd out the logo and hint.
@@ -34,10 +33,6 @@ class SplashScreen(Screen):
                 id="splash-hint",
                 markup=False,
             )
-            with Horizontal(id="splash-frogs"):
-                yield MiniFrog(seed=7, classes="mini-frog")
-                yield MiniFrog(seed=8, classes="mini-frog")
-                yield MiniFrog(seed=9, classes="mini-frog")
             yield Static("", id="splash-spacer-bottom")
         yield Footer()
 
