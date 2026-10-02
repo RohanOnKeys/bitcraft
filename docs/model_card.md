@@ -32,7 +32,7 @@ held-out timesteps:
 | --- | ---: | ---: | ---: | ---: |
 | Isolation Forest alone | 0.197 | 0.037 | 0.00 | 0.00 |
 | Risk model alone | 0.940 | 0.803 | 1.00 | 1.00 |
-| **Composite (shipped ranking)** | **0.879** | **0.775** | **0.98** | **0.994** |
+| **Composite (shipped ranking)** | **0.899** | **0.812** | **1.00** | **0.994** |
 
 The team chose (2026-10-02) to add the supervised risk model and keep the
 Isolation Forest as a small, label-free secondary signal.
