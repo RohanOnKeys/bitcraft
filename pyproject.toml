@@ -27,6 +27,11 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Security",
 ]
 dependencies = [
@@ -44,6 +49,8 @@ bitcraft = "bitcraft.cli:main"
 [project.urls]
 Homepage = "https://github.com/RohanOnKeys/bitcraft"
 Source = "https://github.com/RohanOnKeys/bitcraft"
+Documentation = "https://github.com/RohanOnKeys/bitcraft/blob/main/docs/user_manual.md"
+Issues = "https://github.com/RohanOnKeys/bitcraft/issues"
 
 [tool.setuptools.dynamic]
 version = { attr = "bitcraft.__version__" }
