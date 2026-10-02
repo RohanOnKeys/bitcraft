@@ -26,6 +26,10 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
 - Generated metadata, plain and GeoIP-enriched, published privately on
   Kaggle as `rohanllm/bitcraft-bitcoin-metadata`.
 
+- Released: `bitcraft` 0.1.2 on PyPI (https://pypi.org/project/bitcraft/)
+  and GitHub release `v0.1.2`; README is the PyPI description; author
+  credits corrected (Jagadish Prasad Pattanaik).
+
 ## Current verification status
 
 - Tests: 78 passed (`python -m pytest tests`).
@@ -41,11 +45,11 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
 
 ## Not Done
 
-- PyPI and Chocolatey uploads (packages build, pass `twine check` and
-  install cleanly).
+- Chocolatey upload (package prepared in `packages/chocolatey`, needs a
+  Chocolatey account and community moderation).
 - Items in `plans/future.md`.
 
 ## Next
 
-- Open the PR from `feat/live-model-backend-and-tui-polish`.
-- Publish packages once accounts and tokens are set up.
+- Publish the Chocolatey package.
+- Items in `plans/future.md`.
