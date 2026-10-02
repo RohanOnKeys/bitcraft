@@ -86,7 +86,7 @@ def _entity_evidence(row: pd.Series, reasons: list[dict] | None) -> tuple[list[d
         flags.append(f"peeling chain of {int(row['peel_chain_max'])}")
     if row["round_output_share"] >= 0.3:
         flags.append("round payouts")
-    text = parts[0] + (" — " + ", ".join(flags) if flags else "") + f". Risk {row['risk_score']:.2f} [modeled]."
+    text = parts[0] + (": " + ", ".join(flags) if flags else "") + f". Risk {row['risk_score']:.2f} [modeled]."
     return items, text
 
 

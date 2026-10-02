@@ -567,7 +567,7 @@ class DemoProvider:
             items.append(EvidenceItem("linked Elliptic alerts", str(wallet.linked_alerts), "real"))
         text = (
             f"Wallet cluster of {wallet.n_addresses} addresses, {wallet.n_txs} transactions"
-            f" — IPs in {wallet.distinct_src_countries} countries, {wallet.tor_share:.0%} via Tor."
+            f": IPs in {wallet.distinct_src_countries} countries, {wallet.tor_share:.0%} via Tor."
             f" Risk {wallet.risk_score:.2f} [modeled]."
         )
         return WalletDetail(

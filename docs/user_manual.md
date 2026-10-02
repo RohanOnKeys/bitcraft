@@ -209,7 +209,7 @@ demo data. `--demo` and `--api` force one or the other.
 Dashboard only: `f` focuses the filters, `x` resets them, `n` / `p` page
 through alerts, `s` cycles the sort order.
 
-Threats only: `1`–`4` show all / critical / high / medium alerts, `a` /
+Threats only: `1` to `4` show all / critical / high / medium alerts, `a` /
 `c` / `n` filter by the main driver (anomaly, community, network), `w`
 toggles "network evidence required".
 
@@ -244,7 +244,7 @@ reasons.
 
 ### 6.4 Reading an alert
 
-- **Composite score** (0–1) fuses four signals with the weights shown on
+- **Composite score** (0 to 1) fuses four signals with the weights shown on
   screen: the risk model, the anomaly detector, community illicit ratio,
   and the network/metadata model.
 - **Severity** is a display tier: critical ≥ 0.80, high ≥ 0.60,
