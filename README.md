@@ -107,7 +107,7 @@ bitcraft                      # opens BitCraft in a new, large terminal window
 ```
 
 From a clone, `pip install -e .` gives you the same `bitcraft` command, or
-run `bitcraft.bat` / `./bitcraft` / `./bitcraft.ps1` straight from the repo
+run `bitcraft.bat` / `./bitcraft.sh` / `./bitcraft.ps1` straight from the repo
 root without installing anything.
 
 | Command | What it does |
@@ -161,15 +161,15 @@ Model details and held-out metrics: [docs/model_card.md](docs/model_card.md).
 ### Terminal UI (demo mode)
 
 ```text
-pip install -r tui/requirements.txt
-python -m tui.app --demo
+pip install -r bitcraft/requirements.txt
+python -m bitcraft.app --demo
 ```
 
 Other data sources:
 
 ```text
-python -m tui.app --api
-python -m tui.app
+python -m bitcraft.app --api
+python -m bitcraft.app
 ```
 
 `--demo` forces synthetic data. `--api` talks to FastAPI at

@@ -5,4 +5,4 @@ set "ROOT=%~dp0"
 set "PY=%ROOT%.venv\Scripts\python.exe"
 if not exist "%PY%" set "PY=python"
 cd /d "%ROOT%"
-"%PY%" -m tui.cli %*
+"%PY%" -m bitcraft.cli %*

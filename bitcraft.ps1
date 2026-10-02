@@ -3,4 +3,4 @@ $root = $PSScriptRoot
 $py = Join-Path $root '.venv\Scripts\python.exe'
 if (-not (Test-Path $py)) { $py = 'python' }
 Push-Location $root
-try { & $py -m tui.cli @args } finally { Pop-Location }
+try { & $py -m bitcraft.cli @args } finally { Pop-Location }

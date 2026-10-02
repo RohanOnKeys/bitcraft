@@ -149,7 +149,7 @@ The implementation must follow this staged pipeline.
 | 5 - AI/ML Detection | `ml/anomaly_model.py`, `ml/graph_builder.py` | Isolation Forest anomaly scoring + Louvain communities |
 | 6 - Explainability | `ml/explainability.py` | SHAP TreeExplainer + provenance-tagged evidence |
 | 7 - Alerting & Ranking | `ml/ranker.py` | Fuse scores into `composite_score` and write alerts |
-| 8 - Dashboard | `tui/` | Ranked alerts, graph explorer, evidence panel |
+| 8 - Dashboard | `bitcraft/` | Ranked alerts, graph explorer, evidence panel |
 | 9 - Packaging | `docker-compose.yml` | One-command fully offline execution |
 
 ---
@@ -560,7 +560,7 @@ bitcraft/
 │   ├── requirements.txt
 │   └── Dockerfile
 │
-├── tui/
+├── bitcraft/
 │   ├── app.py
 │   ├── theme.tcss
 │   ├── api_client.py

@@ -39,17 +39,17 @@ dependencies = [
 dev = ["pytest>=8.3", "pytest-asyncio>=0.23"]
 
 [project.scripts]
-bitcraft = "tui.cli:main"
+bitcraft = "bitcraft.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/RohanOnKeys/bitcraft"
 Source = "https://github.com/RohanOnKeys/bitcraft"
 
 [tool.setuptools.dynamic]
-version = { attr = "tui.__version__" }
+version = { attr = "bitcraft.__version__" }
 
 [tool.setuptools.packages.find]
-include = ["tui*"]
+include = ["bitcraft*"]
 
 [tool.setuptools.package-data]
-tui = ["theme.tcss", "assets/mascots/*.png"]
+bitcraft = ["theme.tcss", "assets/mascots/*.png"]

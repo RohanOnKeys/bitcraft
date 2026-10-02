@@ -4,7 +4,7 @@
 
 1. Builds the wheel and sdist into dist/ (python -m build).
 2. Copies the wheel and LICENSE into packages/chocolatey/tools/ and syncs
-   the nuspec <version> with tui/__init__.py.
+   the nuspec <version> with bitcraft/__init__.py.
 3. Runs `choco pack` into dist/ when Chocolatey is installed.
 
 Publish afterwards with:
@@ -28,10 +28,10 @@ NUSPEC = CHOCO / "bitcraft.nuspec"
 
 
 def version() -> str:
-    text = (REPO / "tui" / "__init__.py").read_text(encoding="utf-8")
+    text = (REPO / "bitcraft" / "__init__.py").read_text(encoding="utf-8")
     match = re.search(r'__version__ = "([^"]+)"', text)
     if not match:
-        raise SystemExit("tui/__init__.py has no __version__")
+        raise SystemExit("bitcraft/__init__.py has no __version__")
     return match.group(1)
 
 

@@ -2,14 +2,14 @@
 
 import pytest
 
-from tui.app import BitCraftApp
-from tui.providers.demo_provider import DemoProvider
-from tui.screens.boot import BootScreen
-from tui.screens.dashboard import DashboardScreen
-from tui.screens.graph_explorer import GraphExplorerScreen
-from tui.screens.splash import SplashScreen
-from tui.store import Store
-from tui.widgets.logo import BITCRAFT_LOGO, BITCRAFT_TAGLINE
+from bitcraft.app import BitCraftApp
+from bitcraft.providers.demo_provider import DemoProvider
+from bitcraft.screens.boot import BootScreen
+from bitcraft.screens.dashboard import DashboardScreen
+from bitcraft.screens.graph_explorer import GraphExplorerScreen
+from bitcraft.screens.splash import SplashScreen
+from bitcraft.store import Store
+from bitcraft.widgets.logo import BITCRAFT_LOGO, BITCRAFT_TAGLINE
 
 
 def test_logo_is_solid_block_wordmark() -> None:

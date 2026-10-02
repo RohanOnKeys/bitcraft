@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Built by packages/build_package.py, which syncs <version> with tui/__init__.py. -->
+<!-- Built by packages/build_package.py, which syncs <version> with bitcraft/__init__.py. -->
 <package xmlns="http://schemas.microsoft.com/packages/2015/06/nuspec.xsd">
   <metadata>
     <id>bitcraft</id>

@@ -1,4 +1,4 @@
 # Launchers keep their native line endings.
 *.bat text eol=crlf
 *.ps1 text eol=crlf
-bitcraft text eol=lf
+bitcraft.sh text eol=lf
