@@ -21,6 +21,76 @@ Footer {
     color: #7a7a7a;
 }
 
+/* Gold scrollbars everywhere (the theme sets the same, this pins it). */
+* {
+    scrollbar-color: #d4af37 60%;
+    scrollbar-color-hover: #e8c55a;
+    scrollbar-color-active: #ffd84d;
+    scrollbar-background: #0d0b08;
+    scrollbar-background-hover: #0d0b08;
+    scrollbar-background-active: #0d0b08;
+    scrollbar-corner-color: #0d0b08;
+    scrollbar-size-vertical: 1;
+}
+
+/* Tables: gold cursor row, gold header, faint warm zebra. */
+DataTable {
+    background: #050505;
+}
+DataTable > .datatable--header {
+    background: #0d0b08;
+    color: #d4af37;
+    text-style: bold;
+}
+DataTable > .datatable--cursor {
+    background: #d4af37;
+    color: #000000;
+    text-style: bold;
+}
+DataTable:blur > .datatable--cursor {
+    background: #d4af37 55%;
+    color: #000000;
+}
+DataTable > .datatable--hover {
+    background: #d4af37 12%;
+}
+DataTable > .datatable--odd-row {
+    background: #0b0906;
+}
+DataTable > .datatable--even-row {
+    background: #050505;
+}
+
+Checkbox > .toggle--button {
+    color: #0d0b08;
+    background: #2a2418;
+}
+Checkbox.-on > .toggle--button {
+    color: #000000;
+    background: #d4af37;
+}
+Checkbox:focus > .toggle--label {
+    background: #d4af37 20%;
+}
+
+ProgressBar Bar > .bar--bar,
+ProgressBar Bar > .bar--complete {
+    color: #ffd84d;
+    background: #1c1814;
+}
+
+/* Titled chart/info panels. */
+.panel {
+    background: #050505;
+    border: round #2a2418;
+    border-title-color: #ffd84d;
+    border-title-style: bold;
+    border-subtitle-color: #8a8078;
+}
+.panel:focus-within {
+    border: round #d4af37;
+}
+
 /* --- Splash ----------------------------------------------------------- */
 
 #splash {
@@ -32,6 +102,12 @@ Footer {
 #splash-spacer-top,
 #splash-spacer-bottom {
     height: 1fr;
+}
+
+#splash-mascot {
+    width: 100%;
+    content-align: center top;
+    margin-bottom: 1;
 }
 
 #splash-logo {
@@ -59,10 +135,16 @@ Footer {
     padding: 1 2;
 }
 
-#boot-logo {
+#boot-brand {
     width: 100%;
     height: auto;
-    content-align: center middle;
+    align: center top;
+}
+
+#boot-logo {
+    width: auto;
+    height: auto;
+    margin: 1 0 0 2;
     color: #d4af37;
     text-style: bold;
 }
@@ -82,7 +164,9 @@ Footer {
 
 #boot-log {
     width: 80%;
-    height: 14;
+    height: 1fr;
+    max-height: 14;
+    min-height: 5;
     background: #050505;
     border: round #1a1a1a;
     color: #e6e6e6;
@@ -113,10 +197,10 @@ Footer {
 }
 
 #kpi-summary {
-    height: 4;
+    height: 5;
     background: #050505;
-    border: round #1a1a1a;
-    margin-bottom: 1;
+    border: round #2a2418;
+    margin-bottom: 0;
 }
 
 #kpi-row {
@@ -146,17 +230,15 @@ Footer {
     width: 100%;
     height: auto;
     background: #050505;
-    border: round #1a1a1a;
-    padding: 1;
+    border: round #2a2418;
+    padding: 0 1;
 }
 
 #score-histogram {
     width: 100%;
     height: 1fr;
-    background: #050505;
-    border: round #1a1a1a;
-    padding: 1;
-    margin-top: 1;
+    min-height: 6;
+    padding: 0 1;
     color: #7a7a7a;
 }
 
@@ -169,7 +251,11 @@ Footer {
     width: 100%;
     height: 1fr;
     background: #050505;
-    border: round #1a1a1a;
+    border: round #2a2418;
+}
+
+#alert-list:focus {
+    border: round #d4af37;
 }
 
 #alert-status {
@@ -182,29 +268,52 @@ Footer {
     height: auto;
 }
 
-#preview-pane {
+#preview-col {
     width: 36;
     height: 100%;
-    background: #050505;
-    border: round #1a1a1a;
-    padding: 1;
     margin-left: 1;
+}
+
+#preview-pane {
+    width: 100%;
+    height: auto;
+    padding: 0 1;
     color: #e6e6e6;
 }
 
+#preview-graph {
+    width: 100%;
+    height: 1fr;
+    min-height: 8;
+}
+
+#dashboard-mascot {
+    margin: 0 0 0 1;
+}
+
 .filter-label {
-    color: #7a7a7a;
+    color: #8a8078;
     margin-top: 1;
 }
 
 #filter-panel Input {
     width: 100%;
-    background: #000000;
-    border: solid #1a1a1a;
+    height: 1;
+    background: #0d0b08;
+    border: none;
+    padding: 0 1;
 }
 
 #filter-panel Input:focus {
-    border: solid #d4af37;
+    background: #2a2210;
+}
+
+#filter-panel Checkbox {
+    height: 1;
+    border: none;
+    padding: 0;
+    margin-top: 1;
+    background: #050505;
 }
 
 /* --- Alert detail / graph / threats ---------------------------------- */
@@ -215,25 +324,124 @@ Footer {
     padding: 0 1;
 }
 
+#detail-main {
+    width: 1fr;
+    height: 100%;
+}
+
 #detail-body {
     width: 100%;
     height: 1fr;
-    background: #050505;
-    border: round #1a1a1a;
-    padding: 1;
+    padding: 0 2;
+    overflow-y: auto;
+}
+
+#detail-side {
+    width: 58;
+    height: 100%;
+    margin-left: 1;
+}
+
+#detail-graph {
+    width: 100%;
+    height: 1fr;
+    min-height: 10;
+}
+
+#detail-mascot {
+    margin: 0 0 0 1;
+}
+
+#graph-page {
+    width: 100%;
+    height: 1fr;
+    padding: 0 1;
+}
+
+#graph-top {
+    height: 1fr;
+    min-height: 14;
+}
+
+#graph-main {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
 }
 
 #graph-view {
-    background: #050505;
-    border: round #1a1a1a;
-    color: #e6e6e6;
-    padding: 1;
+    width: 100%;
     height: 1fr;
 }
 
-#graph-title {
-    padding: 1 2 0 2;
-    text-style: bold;
+#graph-legend {
+    height: 1;
+    width: 100%;
+}
+
+#graph-side {
+    width: 58;
+    height: 100%;
+    margin-left: 1;
+}
+
+#graph-stats {
+    height: 7;
+    padding: 0 1;
+}
+
+#graph-mascot {
+    margin: 0 0 0 1;
+}
+
+#graph-bottom {
+    height: 12;
+}
+
+#graph-bottom-2 {
+    height: 10;
+}
+
+#graph-timeline {
+    width: 2fr;
+    height: 100%;
+    padding: 0 1;
+}
+
+#graph-severity,
+#graph-drivers {
+    width: 40;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
+#graph-communities {
+    width: 1fr;
+    min-width: 34;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
+#graph-flow {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+}
+
+#graph-heatmap {
+    width: 56;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
+#graph-degree {
+    width: 38;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
 }
 
 #threats {
@@ -243,14 +451,14 @@ Footer {
 }
 
 #threat-posture {
-    height: auto;
-    color: #e6e6e6;
+    height: 1;
     padding: 0 1;
+    margin-top: 1;
 }
 
 #threat-stack {
     height: 1;
-    margin: 0 1 1 1;
+    margin: 1 1 0 1;
 }
 
 #threat-body {
@@ -260,37 +468,53 @@ Footer {
 #threat-queue {
     width: 1fr;
     height: 100%;
-    background: #050505;
-    border: round #1a1a1a;
-    padding: 1;
-    margin-right: 1;
+    padding: 0 1;
+}
+
+#threat-side {
+    width: 34;
+    height: 100%;
+    margin-left: 1;
 }
 
 #threat-drivers {
-    width: 28;
-    height: 100%;
-    background: #050505;
-    border: round #1a1a1a;
-    padding: 1;
-    margin-right: 1;
+    width: 100%;
+    height: auto;
+    padding: 0 1;
+}
+
+#threat-mascot {
+    margin: 1 0 0 1;
 }
 
 #threat-communities {
-    width: 36;
+    width: 40;
     height: 100%;
-    background: #050505;
-    border: round #1a1a1a;
+    margin-left: 1;
 }
 
-#threat-signals,
-#threat-coverage,
+#threat-bottom {
+    height: 8;
+}
+
+#threat-signals {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+}
+
+#threat-coverage {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
 #threat-timeline {
-    height: auto;
-    background: #050505;
-    border: round #1a1a1a;
-    padding: 1;
-    margin-top: 1;
-    color: #e6e6e6;
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
 }
 
 /* --- Shared ----------------------------------------------------------- */
@@ -316,4 +540,8 @@ Footer {
 .modeled-badge {
     color: #6a6a6a;
     text-style: italic;
+}
+
+#filter-body {
+    height: auto;
 }
