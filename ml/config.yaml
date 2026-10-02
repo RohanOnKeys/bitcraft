@@ -1,5 +1,20 @@
 # BitCraft ML pipeline configuration.
-# See plans/plan.md sections 6.2 and 7 for the source values.
+# See plans/plan.md sections 6.2 and 7 for the source values, and
+# docs/model_card.md for why a supervised risk model leads the fusion.
+
+# Labels with timestep <= this are "known history": they train the risk
+# model and feed community illicit ratios. Later timesteps are the holdout
+# that precision@k is reported on.
+label_window:
+  train_max_timestep: 34
+
+risk_model:
+  type: hist_gradient_boosting
+  max_iter: 300
+  learning_rate: 0.08
+  max_leaf_nodes: 31
+  cv_folds: 5
+  random_state: 42
 
 isolation_forest:
   n_estimators: 300
@@ -7,9 +22,26 @@ isolation_forest:
   contamination: 0.022
 
 score_fusion:
-  anomaly_score_weight: 0.60
-  community_illicit_ratio_weight: 0.25
-  network_ip_signal_weight: 0.15
+  risk_model_weight: 0.65
+  anomaly_score_weight: 0.05
+  community_illicit_ratio_weight: 0.20
+  network_ip_signal_weight: 0.10
 
 explainability:
   top_n_shap: 100
+
+# Challenge-format transaction/network metadata (ml/metadata_generator.py or
+# any CSV/JSON/XML in that shape). Skipped when the folder is missing.
+metadata:
+  dir: metadata            # under the datasets directory
+  txid_map: txid_map.csv
+  truth: generator_truth.csv
+  geoip_dir: datasets/geoip
+  entity_alerts: 500
+
+metadata_model:
+  max_iter: 200
+  learning_rate: 0.08
+  max_leaf_nodes: 31
+  cv_folds: 5
+  random_state: 42

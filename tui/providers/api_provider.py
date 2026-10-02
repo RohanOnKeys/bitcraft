@@ -20,15 +20,23 @@ from tui.providers.models import (
     AlertSummary,
     CommunityDetail,
     CommunitySummary,
+    EvidenceItem,
     GraphEdge,
     GraphNode,
     Health,
+    LinkEdge,
+    LinkGraph,
+    LinkNode,
     PipelineStatus,
     ProviderError,
     ShapReason,
     StatsSummary,
     Subgraph,
     ThreatOverview,
+    TxMeta,
+    WalletDetail,
+    WalletPage,
+    WalletSummary,
 )
 
 _REAL_SOURCES = {"elliptic", "real"}
@@ -59,10 +67,75 @@ def _parse_shap(raw: Any) -> Optional[list[ShapReason]]:
                     ShapReason(
                         feature_index=int(item.get("feature_index", item.get("index", 0))),
                         contribution=float(item.get("contribution", item.get("value", 0.0))),
+                        feature=item.get("feature"),
                     )
                 )
         return out
     return None
+
+
+def _parse_evidence(raw: Any) -> Optional[list[EvidenceItem]]:
+    """Structured evidence rows; unknown provenance fails safe to modeled."""
+    if not isinstance(raw, list):
+        return None
+    items: list[EvidenceItem] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        provenance = "real" if item.get("provenance") == "real" else "modeled"
+        items.append(
+            EvidenceItem(
+                label=str(item.get("label", "")),
+                value=str(item.get("value", "")),
+                provenance=provenance,
+            )
+        )
+    return items
+
+
+def _parse_tx_meta(raw: Any) -> Optional[TxMeta]:
+    """Metadata block from /alerts/{id} or a wallet's transaction list."""
+    if not isinstance(raw, dict):
+        return None
+    return TxMeta(
+        txid=str(raw["txid"]),
+        src_ip=str(raw["src_ip"]),
+        src_port=int(raw["src_port"]),
+        dst_ip=str(raw["dst_ip"]),
+        dst_port=int(raw["dst_port"]),
+        entity_id=int(raw["entity_id"]),
+        metadata_score=float(raw.get("metadata_score") or 0.0),
+        src_country=raw.get("src_country"),
+        src_asn_org=raw.get("src_asn_org"),
+        dst_country=raw.get("dst_country"),
+        script_type=raw.get("script_type"),
+        n_inputs=int(raw.get("n_inputs") or 0),
+        n_outputs=int(raw.get("n_outputs") or 0),
+        total_in_btc=float(raw.get("total_in_btc") or 0.0),
+        fee=float(raw.get("fee") or 0.0),
+        peel_chain_len=int(raw.get("peel_chain_len") or 0),
+        tor=bool(raw.get("tor_port") or raw.get("src_tor_asn")),
+        elliptic_tx_id=raw.get("elliptic_tx_id"),
+        entity_rank=raw.get("entity_rank"),
+        entity_risk=raw.get("entity_risk"),
+    )
+
+
+def _parse_wallet(raw: dict) -> WalletSummary:
+    return WalletSummary(
+        entity_id=int(raw["entity_id"]),
+        rank=int(raw["rank"]),
+        risk_score=float(raw["risk_score"]),
+        severity=raw.get("severity") or severity_for_score(float(raw["risk_score"])),
+        n_addresses=int(raw["n_addresses"]),
+        n_txs=int(raw["n_txs"]),
+        total_in_btc=float(raw["total_in_btc"]),
+        distinct_src_ips=int(raw["distinct_src_ips"]),
+        distinct_src_countries=int(raw["distinct_src_countries"]),
+        tor_share=float(raw["tor_share"]),
+        peel_chain_max=int(raw["peel_chain_max"]),
+        linked_alerts=int(raw.get("linked_alerts") or 0),
+    )
 
 
 class ApiProvider:
@@ -139,6 +212,7 @@ class ApiProvider:
             timestep=item.get("timestep"),
             community_id=item.get("community_id"),
             severity=severity,
+            model_score=item.get("model_score"),
         )
 
     def alerts(self, query: AlertQuery) -> AlertPage:
@@ -191,7 +265,9 @@ class ApiProvider:
             timestep=summary.timestep,
             community_id=summary.community_id,
             severity=summary.severity,
-            evidence_items=None,  # extension; backend does not send yet
+            evidence_items=_parse_evidence(data.get("evidence_items")),
+            model_score=summary.model_score,
+            metadata=_parse_tx_meta(data.get("metadata")),
         )
 
     def subgraph(self, tx_id: int, depth: int = 1) -> Subgraph:
@@ -234,13 +310,40 @@ class ApiProvider:
         )
 
     def top_communities(self, limit: int = 25) -> list[CommunitySummary]:
-        """No list endpoint yet; return empty and let UI show empty state."""
-        # extension, see future.md: no GET /communities list endpoint
-        return []
+        """GET /communities; an older backend without it gives an empty list."""
+        try:
+            data = self._call(self._client.get_communities, limit)
+        except ProviderError:
+            return []
+        return [
+            CommunitySummary(
+                community_id=int(c["community_id"]),
+                size=int(c["size"]),
+                illicit_ratio=c.get("illicit_ratio"),
+                mean_pagerank=float(c.get("mean_pagerank") or 0.0),
+                alert_count=int(c.get("alert_count", 0)),
+            )
+            for c in data
+        ]
 
     def threat_overview(self) -> ThreatOverview:
-        """Approximate from alerts page when no dedicated endpoint exists."""
-        # extension, see future.md
+        """GET /threats/overview, else approximate from the alerts page."""
+        try:
+            data = self._call(self._client.get_threat_overview)
+            return ThreatOverview(
+                critical_count=int(data["critical_count"]),
+                high_count=int(data["high_count"]),
+                medium_count=int(data["medium_count"]),
+                low_count=int(data["low_count"]),
+                no_network_evidence_count=int(data["no_network_evidence_count"]),
+                high_illicit_community_count=int(data["high_illicit_community_count"]),
+                alerts_per_timestep={
+                    int(k): int(v) for k, v in (data.get("alerts_per_timestep") or {}).items()
+                }
+                or None,
+            )
+        except ProviderError:
+            pass
         page = self.alerts(AlertQuery(offset=0, limit=500))
         crit = high = med = low = no_net = 0
         for row in page.items:
@@ -263,4 +366,35 @@ class ApiProvider:
             no_network_evidence_count=no_net,
             high_illicit_community_count=0,
             alerts_per_timestep=None,
+        )
+
+    def wallets(self, offset: int = 0, limit: int = 100) -> WalletPage:
+        """GET /entities."""
+        data = self._call(self._client.get_entities, offset, limit)
+        return WalletPage(
+            items=[_parse_wallet(x) for x in data.get("items", [])],
+            total=int(data.get("total", 0)),
+            offset=int(data.get("offset", offset)),
+            limit=int(data.get("limit", limit)),
+        )
+
+    def wallet_detail(self, entity_id: int) -> WalletDetail:
+        """GET /entities/{id}."""
+        data = self._call(self._client.get_entity, entity_id)
+        return WalletDetail(
+            summary=_parse_wallet(data),
+            evidence_text=str(data.get("evidence_text") or ""),
+            evidence_items=_parse_evidence(data.get("evidence_items")) or [],
+            countries=list(data.get("countries") or []),
+            addresses=[a["address"] for a in data.get("addresses", [])],
+            transactions=[t for t in (_parse_tx_meta(x) for x in data.get("transactions", [])) if t],
+            shap_reasons=_parse_shap(data.get("shap_reasons")),
+        )
+
+    def wallet_graph(self, entity_id: int) -> LinkGraph:
+        """GET /entities/{id}/graph."""
+        data = self._call(self._client.get_entity_graph, entity_id)
+        return LinkGraph(
+            nodes=[LinkNode(str(n["id"]), str(n["kind"]), str(n["label"]), n.get("score")) for n in data.get("nodes", [])],
+            edges=[LinkEdge(str(e["source"]), str(e["target"]), str(e["relation"])) for e in data.get("edges", [])],
         )

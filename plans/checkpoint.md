@@ -4,46 +4,43 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
 
 ## Done
 
-- The local workspace contains the real dataset files in [datasets](datasets),
-  and the notebook workflow has already generated the anomaly-score model
-  artifact at [ml/models/anomaly_scores.parquet](ml/models/anomaly_scores.parquet).
-- TUI foundations through threat detection are working in demo mode:
-  swappable `DataProvider` (`demo` / `api` / `auto`), `store.py`,
-  Textual modes (`dashboard`, `threats`, `graph`), splash and boot flow,
-  populated dashboard, paging/sort/filter support, and threat queue
-  presentation.
-- Textual floor set to `textual>=5.0` and verified in the project
-  environment.
-- `tui/api_client.py` and the provider layer are implemented.
-- The ML pipeline has been fixed and validated in the repo test scope:
-  data-loader coercion, synthetic-layer merge behavior, feature-matrix
-  assembly, and Isolation Forest scoring all pass the ML test suite.
-- Verified status: 45 tests passed in the ML subset.
-
-## Not Done
-
-- The live backend and full end-to-end API integration remain incomplete.
-- `ml/ranker.py`, `ml/explainability.py`, `ml/pipeline.py`, and backend
-  handlers / service endpoints are still not fully implemented.
-- Alert detail / graph explorer polish remains incomplete.
-- Analyst tooling (help overlay, triage file, export, guided tour) remains
-  incomplete.
-- Real-world validation against the production dataset still needs to be
-  wired into the deployment and API path once the end-to-end pipeline is
-  connected.
+- ML pipeline end to end (`python -m ml.pipeline`, about 5 minutes):
+  ingestion, transaction graph and Louvain communities (cached), Isolation
+  Forest, supervised risk model, metadata layer, score fusion, ranking,
+  SHAP and provenance-tagged evidence, validation metrics.
+- Metadata layer in the challenge format: generator (CSV, JSON, XML),
+  validating ingestion for all three plus JSON Lines, offline GeoIP from
+  DB-IP Lite, IP / address / transaction entity graph, common-input wallet
+  clustering, metadata model and ranked wallet alerts.
+- Backend: loader into SQLite or PostgreSQL, every planned endpoint plus
+  `/communities`, `/threats/overview`, `/entities`, `/addresses`, `/ips`,
+  `/metadata`, `/pipeline/metrics`; optional Redis cache.
+- TUI reads the live API: dashboard, threats, graph explorer, wallets and
+  alert detail; frogs only on the splash and boot screens.
+- `bitcraft` CLI opens a sized terminal window; pip and Chocolatey
+  packaging; Apache 2.0 license with NOTICE.
+- Docs: user manual, technical writeup, model card, dataset provenance.
+- Generated metadata published privately on Kaggle as
+  `rohanllm/bitcraft-bitcoin-metadata`.
 
 ## Current verification status
 
-- Passed: 45 ML tests in the repo test subset
-- Dataset present: yes, under [datasets](datasets)
-- Model artifact present: yes, under [ml/models/anomaly_scores.parquet](ml/models/anomaly_scores.parquet)
-- Status: ML pipeline is fixed and passes the repository ML checks
-- Remaining status: backend and full system integration are still work in progress
+- Tests: 75 passed (`python -m pytest tests`).
+- Held-out timesteps 35 to 49: composite AUC 0.899, precision@100 1.00,
+  precision@500 0.994.
+- Metadata model held-out AUC 0.969; wallet alerts illicit at top 100 /
+  500: 0.98 / 0.96; clustering purity 0.999.
+- Dataset and artifacts are local only (`datasets/`, `ml/artifacts/`,
+  git-ignored).
+
+## Not Done
+
+- PyPI and Chocolatey uploads (packages build and install locally).
+- Full `docker compose up --build` run (compose config and the PostgreSQL
+  load were verified separately).
+- Items in `plans/future.md`.
 
 ## Next
 
-- Finish the backend and ranking/explainability layer to match the
-  validated ML pipeline.
-- Wire the live API and the TUI to the real training artifact and dataset
-  flow once the backend contract is ready.
-- Complete the remaining graph-explorer and analyst tooling work.
+- Open the PR from `feat/live-model-backend-and-tui-polish`.
+- Publish packages once accounts and tokens are set up.

@@ -11,10 +11,13 @@ from tui.providers.models import (
     CommunityDetail,
     CommunitySummary,
     Health,
+    LinkGraph,
     PipelineStatus,
     StatsSummary,
     Subgraph,
     ThreatOverview,
+    WalletDetail,
+    WalletPage,
 )
 
 
@@ -64,4 +67,16 @@ class DataProvider(Protocol):
 
     def pipeline_status(self) -> PipelineStatus:
         """Last/running offline pipeline job status."""
+        ...
+
+    def wallets(self, offset: int = 0, limit: int = 100) -> WalletPage:
+        """Ranked wallet (address cluster) alerts."""
+        ...
+
+    def wallet_detail(self, entity_id: int) -> WalletDetail:
+        """Evidence, addresses, transactions and IPs for one wallet."""
+        ...
+
+    def wallet_graph(self, entity_id: int) -> LinkGraph:
+        """Link graph: wallet -> addresses -> transactions <- IPs."""
         ...

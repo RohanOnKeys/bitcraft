@@ -1,15 +1,22 @@
-"""GET /stats/summary."""
+"""GET /stats/summary and GET /threats/overview."""
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.stats import StatsSummary
+from app.schemas.stats import StatsSummary, ThreatOverview
+from app.services import stats_service
 
-router = APIRouter(prefix="/stats", tags=["stats"])
+router = APIRouter(tags=["stats"])
 
 
-@router.get("/summary", response_model=StatsSummary)
+@router.get("/stats/summary", response_model=StatsSummary)
 def get_stats_summary(db: Session = Depends(get_db)):
     """Return dashboard KPIs."""
-    raise NotImplementedError
+    return stats_service.get_summary(db)
+
+
+@router.get("/threats/overview", response_model=ThreatOverview)
+def get_threat_overview(db: Session = Depends(get_db)):
+    """Return severity mix, coverage gaps and per-timestep alert volume."""
+    return stats_service.get_threat_overview(db)

@@ -1,6 +1,16 @@
-"""Pydantic schemas for the /communities endpoint."""
+"""Pydantic schemas for the /communities endpoints."""
 
 from pydantic import BaseModel
+
+
+class CommunitySummary(BaseModel):
+    """Compact community row for overview lists."""
+
+    community_id: int
+    size: int
+    illicit_ratio: float | None
+    mean_pagerank: float
+    alert_count: int = 0
 
 
 class CommunityDetail(BaseModel):
@@ -10,4 +20,5 @@ class CommunityDetail(BaseModel):
     size: int
     illicit_ratio: float | None
     mean_pagerank: float
+    alert_count: int = 0
     member_tx_ids: list[int]

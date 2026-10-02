@@ -28,7 +28,7 @@ class CommunityTable(DataTable):
             str(c.community_id),
             str(c.size),
             illicit,
-            f"{c.mean_pagerank:.4f}",
+            f"{c.mean_pagerank:.1e}",
             str(c.alert_count),
             key=str(c.community_id),
         )

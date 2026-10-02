@@ -62,6 +62,26 @@ class ApiClient:
         """GET /communities/{community_id}."""
         return self.get(f"/communities/{community_id}")
 
+    def get_communities(self, limit: int = 25, sort: str = "risk") -> list:
+        """GET /communities (top communities overview)."""
+        return self.get("/communities", params={"limit": limit, "sort": sort})
+
+    def get_threat_overview(self) -> dict:
+        """GET /threats/overview."""
+        return self.get("/threats/overview")
+
+    def get_entities(self, offset: int = 0, limit: int = 100) -> dict:
+        """GET /entities (ranked wallets)."""
+        return self.get("/entities", params={"offset": offset, "limit": limit})
+
+    def get_entity(self, entity_id: int) -> dict:
+        """GET /entities/{id}."""
+        return self.get(f"/entities/{entity_id}")
+
+    def get_entity_graph(self, entity_id: int) -> dict:
+        """GET /entities/{id}/graph."""
+        return self.get(f"/entities/{entity_id}/graph")
+
     def get_stats_summary(self) -> dict:
         """GET /stats/summary."""
         return self.get("/stats/summary")

@@ -1,0 +1,19 @@
+VERIFICATION
+Verification is intended to assist the Chocolatey moderators and community
+in verifying that this package's contents are trustworthy.
+
+This package embeds the BitCraft wheel (bitcraft-<version>-py3-none-any.whl),
+built from https://github.com/RohanOnKeys/bitcraft by
+packages/build_package.py and identical to the wheel published on PyPI:
+
+    https://pypi.org/project/bitcraft/#files
+
+To verify, download the wheel for the same version from PyPI and compare
+SHA256 checksums:
+
+    Get-FileHash .\bitcraft-<version>-py3-none-any.whl -Algorithm SHA256
+
+The install script creates a private Python virtual environment and runs pip,
+which downloads BitCraft's dependencies (textual, httpx, pillow) from PyPI.
+
+LICENSE.txt is the Apache License 2.0 from the repository root.

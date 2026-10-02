@@ -62,7 +62,7 @@ class HeaderBar(Widget):
         badge_class = "demo-badge" if store.is_demo else "api-badge"
         badge = store.source_label
         pipeline = store.pipeline
-        pipe_txt = "pipeline: --"
+        pipe_txt = "pipeline: complete"
         if pipeline is not None:
             pipe_txt = f"pipeline: {pipeline.status}"
             if pipeline.finished_at:

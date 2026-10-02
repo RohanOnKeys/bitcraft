@@ -31,3 +31,21 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Dataset (Kaggle: rosalinnayak/bitcoin-transaction-traffic) and pipeline outputs
+# Everything under datasets/ (CSVs, generated metadata, GeoIP databases) stays local.
+datasets/*
+!datasets/.gitkeep
+ml/artifacts/
+backend/*.db
+
+# Launcher API log
+backend/api.log
+
+# Python / Chocolatey build outputs
+dist/
+build/
+*.egg-info/
+*.nupkg
+packages/chocolatey/tools/*.whl
+packages/chocolatey/tools/LICENSE.txt

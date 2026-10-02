@@ -15,9 +15,9 @@ class FilterPanel(Widget):
         with Vertical(id="filter-body"):
             yield Label("Filters", classes="accent")
             yield Static("min score", classes="filter-label")
-            yield Input(placeholder="0.0", id="filter-min-score")
+            yield Input(placeholder="0.0", type="number", id="filter-min-score")
             yield Static("community id", classes="filter-label")
-            yield Input(placeholder="any", id="filter-community")
+            yield Input(placeholder="any", type="integer", id="filter-community")
             yield Static("severity (csv)", classes="filter-label")
             yield Input(placeholder="critical,high", id="filter-severity")
             yield Checkbox("network required", id="filter-network")
@@ -32,7 +32,11 @@ class FilterPanel(Widget):
         """Parse inputs into store.filters."""
         store = self.app.store
         min_raw = self.query_one("#filter-min-score", Input).value.strip()
-        store.filters.min_score = float(min_raw) if min_raw else None
+        try:
+            store.filters.min_score = float(min_raw) if min_raw else None
+        except ValueError:
+            # Half-typed or mistyped input ("0.4x", "."): keep the last good value.
+            pass
         comm_raw = self.query_one("#filter-community", Input).value.strip()
         store.filters.community_id = int(comm_raw) if comm_raw.isdigit() else None
         sev_raw = self.query_one("#filter-severity", Input).value.strip()

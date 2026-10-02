@@ -98,6 +98,66 @@ bitcraft/
 
 ## Getting Started
 
+### Install and run
+
+```text
+pip install bitcraft          # any OS, Python 3.10+
+choco install bitcraft        # Windows (Chocolatey)
+bitcraft                      # opens BitCraft in a new, large terminal window
+```
+
+From a clone, `pip install -e .` gives you the same `bitcraft` command, or
+run `bitcraft.bat` / `./bitcraft` / `./bitcraft.ps1` straight from the repo
+root without installing anything.
+
+| Command | What it does |
+| --- | --- |
+| `bitcraft` | New window (Windows Terminal, else Command Prompt; gnome-terminal, konsole, kitty, alacritty or xterm on Linux; Terminal.app on macOS) |
+| `bitcraft demo` | Same, with built-in demo data |
+| `bitcraft here` | Run inside the current terminal |
+| `bitcraft status` | Check the API and the last pipeline run |
+| `bitcraft run --api-url URL --size 200x60` | Pick a backend and window size |
+
+Inside a source checkout with a loaded database, `bitcraft` also starts the
+API in the background and stops it when you quit. Release builds:
+`python packages/build_package.py` (wheel, sdist and the Chocolatey
+package).
+
+### Model and backend (live data)
+
+The dataset is the private Kaggle dataset
+`rosalinnayak/bitcoin-transaction-traffic`. Put its five CSVs in
+`datasets/` (git-ignored), then:
+
+```text
+pip install -r requirements.txt -r backend/requirements.txt
+python -m ml.geoip download               # one-time: DB-IP Lite country + ASN databases
+python -m ml.metadata_generator           # challenge-format metadata (CSV, JSON, XML)
+python -m ml.pipeline                     # ~5 min first run, writes ml/artifacts/
+cd backend && python -m app.loader        # loads artifacts into backend/bitcraft.db
+bitcraft                                  # starts the API and opens the TUI
+```
+
+The metadata layer carries the challenge's minimum fields (timestamp,
+src/dst IP and port, txid, input/output addresses and amounts, fee, script
+type). `python -m ml.ingest FILE` validates any CSV, JSON or XML file in
+that shape; GeoIP adds country and ASN offline.
+
+With no `DATABASE_URL` the API uses a local SQLite file, and Redis is
+optional. For the full PostgreSQL + Redis stack, use `docker compose up --build`:
+the `ml` service runs the pipeline, then `backend` loads the results and
+serves on port 8000.
+
+API: `/alerts`, `/alerts/{tx_id}`, `/graph/{tx_id}?depth=`, `/communities`,
+`/communities/{id}`, `/entities`, `/entities/{id}`, `/entities/{id}/graph`,
+`/addresses/{address}`, `/ips/{ip}`, `/metadata/{tx_id}`, `/stats/summary`,
+`/threats/overview`, `/pipeline/status`, `/pipeline/metrics`. Interactive docs
+at `http://localhost:8000/docs`.
+
+Full instructions: [docs/user_manual.md](docs/user_manual.md). Approach,
+model choice and explainability: [docs/technical_writeup.md](docs/technical_writeup.md).
+Model details and held-out metrics: [docs/model_card.md](docs/model_card.md).
+
 ### Terminal UI (demo mode)
 
 ```text
@@ -153,4 +213,11 @@ Planned technologies include:
 
 ## License
 
-License information will be added when the project reaches a stable release.
+BitCraft is open source under the [Apache License 2.0](LICENSE).
+
+Copyright 2026 The BitCraft Authors: Rohan Pattanayak, Jagadish Pattnaik,
+Shreya Mishra, Shreya Mohanty, Ashutosh Badapada and Rosalin Nayak.
+See [NOTICE](NOTICE).
+
+The Elliptic-derived dataset is distributed separately and is not covered
+by this license.

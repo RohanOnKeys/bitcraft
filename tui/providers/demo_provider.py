@@ -22,18 +22,26 @@ from tui.providers.models import (
     GraphEdge,
     GraphNode,
     Health,
+    LinkEdge,
+    LinkGraph,
+    LinkNode,
     PipelineStatus,
     ProviderError,
     ShapReason,
     StatsSummary,
     Subgraph,
     ThreatOverview,
+    TxMeta,
+    WalletDetail,
+    WalletPage,
+    WalletSummary,
 )
 
-# Mirrored from ml/config.yaml (plans/plan.md section 7).
-ANOMALY_WEIGHT = 0.60
-COMMUNITY_WEIGHT = 0.25
-NETWORK_WEIGHT = 0.15
+# Mirrored from ml/config.yaml score_fusion.
+MODEL_WEIGHT = 0.65
+ANOMALY_WEIGHT = 0.05
+COMMUNITY_WEIGHT = 0.20
+NETWORK_WEIGHT = 0.10
 
 TOTAL_TRANSACTIONS = 203_769
 LABELED_COVERAGE_PCT = 22.9
@@ -42,6 +50,25 @@ NETWORK_COVERAGE_PCT = 12.0
 FULL_STACK_COVERAGE_PCT = 12.0
 CONTAMINATION = 0.022
 ALERT_COUNT = int(round(TOTAL_TRANSACTIONS * CONTAMINATION))  # 4483
+
+DEMO_WALLETS = 300
+_B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+_BECH = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+_COUNTRIES = ("US", "DE", "NL", "RU", "SG", "GB", "FR", "BR", "IN", "JP", "CA", "UA")
+_ORGS = ("Hetzner Online GmbH", "OVH SAS", "DigitalOcean, LLC", "Comcast Cable", "Deutsche Telekom AG",
+         "Stiftung Erneuerbare Freiheit", "Amazon.com, Inc.", "Orange S.A.")
+
+
+def _demo_address(rng: random.Random) -> str:
+    kind = rng.random()
+    if kind < 0.5:
+        return "bc1q" + "".join(rng.choice(_BECH) for _ in range(38))
+    return rng.choice("13") + "".join(rng.choice(_B58) for _ in range(33))
+
+
+def _demo_ip(rng: random.Random) -> str:
+    return f"{rng.randint(11, 222)}.{rng.randint(0, 255)}.{rng.randint(0, 255)}.{rng.randint(1, 254)}"
+
 
 _LATENCY_MIN_MS = 30
 _LATENCY_MAX_MS = 120
@@ -114,7 +141,8 @@ class DemoProvider:
         for i in range(ALERT_COUNT):
             # Heavy tail: small critical head, long low tail.
             u = (i + 1) / ALERT_COUNT
-            anomaly = max(0.0, min(1.0, (1.0 - u) ** 0.25 + rng.gauss(0, 0.02)))
+            model = max(0.0, min(1.0, (1.0 - u) ** 0.25 + rng.gauss(0, 0.02)))
+            anomaly = max(0.0, min(1.0, rng.betavariate(2, 3)))
             community = rng.choice(self._communities)
             if community.illicit_ratio is None:
                 community_risk = rng.uniform(0.0, 0.15)
@@ -125,7 +153,7 @@ class DemoProvider:
                 )
             # Guarantee a critical head for display tiers (>= 0.80 composite).
             if i < 120:
-                anomaly = max(anomaly, 0.98)
+                model = max(model, 0.98)
                 community_risk = max(community_risk, 0.85)
             has_network = rng.random() < (NETWORK_COVERAGE_PCT / 100.0)
             has_synthetic = has_network or (
@@ -136,7 +164,8 @@ class DemoProvider:
             else:
                 network_signal = 0.0
             composite = (
-                ANOMALY_WEIGHT * anomaly
+                MODEL_WEIGHT * model
+                + ANOMALY_WEIGHT * anomaly
                 + COMMUNITY_WEIGHT * community_risk
                 + NETWORK_WEIGHT * network_signal
             )
@@ -155,6 +184,7 @@ class DemoProvider:
                     timestep=rng.randint(1, 49),
                     community_id=community.community_id,
                     severity=severity,
+                    model_score=model,
                 )
             )
             community_alert_counts[community.community_id] += 1
@@ -175,6 +205,7 @@ class DemoProvider:
                     timestep=row.timestep,
                     community_id=row.community_id,
                     severity=row.severity,
+                    model_score=row.model_score,
                 )
             )
         self._alerts = ranked
@@ -345,6 +376,7 @@ class DemoProvider:
             community_id=row.community_id,
             severity=row.severity,
             evidence_items=evidence_items,
+            model_score=row.model_score,
         )
 
     def subgraph(self, tx_id: int, depth: int = 1) -> Subgraph:
@@ -448,3 +480,118 @@ class DemoProvider:
             high_illicit_community_count=high_illicit,
             alerts_per_timestep=per_ts,
         )
+
+    # --- Wallets (demo) ----------------------------------------------------
+
+    def _wallet_rows(self) -> list[WalletSummary]:
+        if getattr(self, "_wallets", None) is None:
+            rng = random.Random(self._seed + 7)
+            rows = []
+            for i in range(DEMO_WALLETS):
+                risk = max(0.02, min(0.99, (1 - (i + 1) / DEMO_WALLETS) ** 2.2 + rng.gauss(0, 0.03)))
+                hot = risk > 0.6
+                rows.append(
+                    WalletSummary(
+                        entity_id=1000 + i,
+                        rank=0,
+                        risk_score=risk,
+                        severity=severity_for_score(risk),
+                        n_addresses=rng.randint(8, 400) if hot else rng.randint(1, 30),
+                        n_txs=rng.randint(10, 120) if hot else rng.randint(1, 20),
+                        total_in_btc=round(rng.uniform(0.5, 90.0), 4),
+                        distinct_src_ips=rng.randint(4, 40) if hot else rng.randint(1, 4),
+                        distinct_src_countries=rng.randint(3, 9) if hot else rng.randint(1, 2),
+                        tor_share=round(rng.uniform(0.2, 0.8), 2) if hot else round(rng.uniform(0, 0.05), 2),
+                        peel_chain_max=rng.randint(2, 12) if hot else rng.randint(0, 1),
+                        linked_alerts=rng.randint(1, 9) if hot else 0,
+                    )
+                )
+            rows.sort(key=lambda w: w.risk_score, reverse=True)
+            self._wallets = [
+                WalletSummary(**{**w.__dict__, "rank": rank}) for rank, w in enumerate(rows, start=1)
+            ]
+        return self._wallets
+
+    def wallets(self, offset: int = 0, limit: int = 100) -> WalletPage:
+        """Ranked demo wallets."""
+        self._sleep()
+        rows = self._wallet_rows()
+        return WalletPage(items=rows[offset : offset + limit], total=len(rows), offset=offset, limit=limit)
+
+    def _demo_txs(self, wallet: WalletSummary, rng: random.Random, n: int) -> list[TxMeta]:
+        txs = []
+        for _ in range(n):
+            tor = rng.random() < wallet.tor_share
+            txs.append(
+                TxMeta(
+                    txid="".join(rng.choice("0123456789abcdef") for _ in range(64)),
+                    src_ip=_demo_ip(rng),
+                    src_port=rng.choice((9050, 9150)) if tor else rng.randint(49152, 65535),
+                    dst_ip=_demo_ip(rng),
+                    dst_port=8333 if rng.random() > 0.1 else rng.choice((8332, 443)),
+                    entity_id=wallet.entity_id,
+                    metadata_score=max(0.0, min(1.0, wallet.risk_score + rng.gauss(0, 0.08))),
+                    src_country=rng.choice(_COUNTRIES),
+                    src_asn_org=_ORGS[5] if tor else rng.choice(_ORGS),
+                    dst_country=rng.choice(_COUNTRIES),
+                    script_type=rng.choice(("p2pkh", "p2wpkh", "p2sh", "p2tr")),
+                    n_inputs=rng.randint(1, 6),
+                    n_outputs=rng.randint(1, 4),
+                    total_in_btc=round(rng.uniform(0.01, 5.0), 6),
+                    fee=round(rng.uniform(0.00001, 0.0005), 8),
+                    peel_chain_len=rng.randint(0, wallet.peel_chain_max),
+                    tor=tor,
+                    entity_rank=wallet.rank,
+                    entity_risk=wallet.risk_score,
+                )
+            )
+        return sorted(txs, key=lambda t: t.metadata_score, reverse=True)
+
+    def wallet_detail(self, entity_id: int) -> WalletDetail:
+        """Demo evidence for one wallet."""
+        self._sleep()
+        wallet = next((w for w in self._wallet_rows() if w.entity_id == entity_id), None)
+        if wallet is None:
+            raise ProviderError(f"wallet not found: {entity_id}")
+        rng = random.Random(self._seed + entity_id)
+        countries = rng.sample(_COUNTRIES, k=min(len(_COUNTRIES), wallet.distinct_src_countries))
+        items = [
+            EvidenceItem("addresses (common-input cluster)", str(wallet.n_addresses), "modeled"),
+            EvidenceItem("source IPs / countries", f"{wallet.distinct_src_ips} / {wallet.distinct_src_countries}", "modeled"),
+        ]
+        if wallet.tor_share > 0:
+            items.append(EvidenceItem("Tor egress share", f"{wallet.tor_share:.0%}", "modeled"))
+        if wallet.peel_chain_max >= 2:
+            items.append(EvidenceItem("longest peeling chain", str(wallet.peel_chain_max), "modeled"))
+        if wallet.linked_alerts:
+            items.append(EvidenceItem("linked Elliptic alerts", str(wallet.linked_alerts), "real"))
+        text = (
+            f"Wallet cluster of {wallet.n_addresses} addresses, {wallet.n_txs} transactions"
+            f": IPs in {wallet.distinct_src_countries} countries, {wallet.tor_share:.0%} via Tor."
+            f" Risk {wallet.risk_score:.2f} [modeled]."
+        )
+        return WalletDetail(
+            summary=wallet,
+            evidence_text=text,
+            evidence_items=items,
+            countries=countries,
+            addresses=[_demo_address(rng) for _ in range(min(12, wallet.n_addresses))],
+            transactions=self._demo_txs(wallet, rng, min(10, wallet.n_txs)),
+        )
+
+    def wallet_graph(self, entity_id: int) -> LinkGraph:
+        """Demo link graph for one wallet."""
+        detail = self.wallet_detail(entity_id)
+        rng = random.Random(self._seed + entity_id + 1)
+        root = f"entity:{entity_id}"
+        nodes = [LinkNode(root, "entity", f"wallet {entity_id}", detail.summary.risk_score)]
+        edges: list[LinkEdge] = []
+        for tx in detail.transactions[:8]:
+            tx_id, ip_id = f"tx:{tx.txid}", f"ip:{tx.src_ip}"
+            nodes += [LinkNode(tx_id, "tx", tx.txid[:10], tx.metadata_score), LinkNode(ip_id, "ip", tx.src_ip)]
+            edges.append(LinkEdge(ip_id, tx_id, "relayed"))
+            for _ in range(rng.randint(1, 3)):
+                address = f"addr:{_demo_address(rng)}"
+                nodes.append(LinkNode(address, "address", address[5:17]))
+                edges += [LinkEdge(root, address, "owns"), LinkEdge(address, tx_id, "input")]
+        return LinkGraph(nodes=nodes, edges=edges)

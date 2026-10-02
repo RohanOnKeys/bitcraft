@@ -27,6 +27,23 @@ Textual (Python). Floor: `textual>=5.0` for `App.MODES` / `switch_mode`.
 | Muted | `#7a7a7a` | Footer, low severity |
 | Modeled badge | `#6a6a6a`, italic | Synthetic-layer values |
 
+## Mascot
+
+A gold pixel frog (`tui/widgets/mascot.py`, art in `tui/assets/mascots/`),
+drawn with half-block characters and downsampled by Pillow at runtime.
+
+| Mood | When |
+|---|---|
+| happy | Resting default (splash, dashboard, threats) |
+| thinking | Boot stages loading |
+| panic | A critical alert is selected (dashboard, threats) |
+| confused | Boot failed |
+| neutral, sleepy, confused, shocked, angry | Idle cycle: flashed for 3s every ~9s while resting on happy |
+
+It hops by one or two pixel rows every ~2.6s and on each mood change
+(panic hops faster, sleepy stays still). Headroom is reserved, so hops
+never move the surrounding layout. On threats it hides under 40 rows.
+
 ## Provider layer
 
 Screens read only from `tui/store.py`. The store holds a `DataProvider`:

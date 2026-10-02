@@ -25,6 +25,7 @@ def test_format_int() -> None:
 
 def test_weighted_parts_sum() -> None:
     """Weighted parts use the config.yaml fusion weights."""
-    parts = weighted_parts(1.0, 1.0, 1.0)
+    parts = weighted_parts(1.0, 1.0, 1.0, model=1.0)
     assert abs(sum(parts.values()) - 1.0) < 1e-9
+    assert primary_driver(1.0, 0.1, 0.1, model=0.9) == "MODEL"
     assert primary_driver(1.0, 0.1, 0.1) == "ANOMALY"
