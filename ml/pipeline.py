@@ -29,7 +29,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from ml import anomaly_model, explainability, graph_builder, ranker, risk_model, validation
+from ml import anomaly_model, explainability, graph_builder, metadata_model, ranker, risk_model, validation
 from ml.data_loader import (
     ELLIPTIC_TX_ID,
     SYNTHETIC_TX_ID,
@@ -45,6 +45,28 @@ log = logging.getLogger("bitcraft.pipeline")
 
 DEFAULT_OUTPUT = Path("ml/artifacts")
 GRAPH_CACHE = "graph_cache.parquet"
+METADATA_FILES = ("bitcoin_metadata.csv", "bitcoin_metadata.json", "bitcoin_metadata.xml")
+# Columns of the per-transaction metadata table served by the API.
+TX_METADATA_COLUMNS = (
+    "txid", "elliptic_tx_id", "entity_id", "timestamp", "src_ip", "src_port", "dst_ip", "dst_port",
+    "src_country", "src_asn", "src_asn_org", "dst_country", "dst_asn", "dst_asn_org", "script_type",
+    "n_inputs", "n_outputs", "total_in_btc", "total_out_btc", "fee", "peel_like", "peel_chain_len",
+    "tor_port", "src_tor_asn", "src_hosting_asn", "cross_border", "metadata_score",
+)
+
+
+def _metadata_inputs(datasets_dir: Path, config: dict) -> tuple[list[Path], Path, Path] | None:
+    """Metadata file(s), txid map and generator truth, if the layer exists."""
+    cfg = config.get("metadata", {})
+    folder = datasets_dir / cfg.get("dir", "metadata")
+    if cfg.get("files"):
+        files = [folder / name for name in cfg["files"]]
+    else:
+        files = [p for p in (folder / name for name in METADATA_FILES) if p.exists()][:1]
+    txid_map = folder / cfg.get("txid_map", "txid_map.csv")
+    if not files or not all(p.exists() for p in files) or not txid_map.exists():
+        return None
+    return files, txid_map, folder / cfg.get("truth", "generator_truth.csv")
 
 
 def _graph_stage(relationships: pd.DataFrame, mapping: pd.DataFrame, cache_dir: Path, source: Path) -> tuple[pd.DataFrame, float]:
@@ -180,8 +202,30 @@ def run_pipeline(
         )
         master["risk_score"] = master[ELLIPTIC_TX_ID].map(risk_scores).fillna(0.0)
 
+        stage("metadata")
+        meta_inputs = _metadata_inputs(datasets_dir, config)
+        meta_result = None
+        if meta_inputs is not None:
+            files, txid_map, truth = meta_inputs
+            meta_result = metadata_model.run(
+                files, txid_map, mapping,
+                master[[ELLIPTIC_TX_ID, "class_label", "timestep"]].copy(), config, truth,
+            )
+            per_tx = meta_result.tx_scores.dropna(subset=[ELLIPTIC_TX_ID])
+            score_by_ell = per_tx.groupby(ELLIPTIC_TX_ID)["metadata_score"].max()
+            master["metadata_score"] = master[ELLIPTIC_TX_ID].map(score_by_ell)
+        else:
+            log.info("metadata layer: none found under %s, skipped", datasets_dir)
+            master["metadata_score"] = float("nan")
+        master["has_metadata"] = master["metadata_score"].notna()
+
         stage("fusion")
         master["network_ip_signal"] = ranker.compute_network_ip_signal(master)
+        # The learned metadata score (IP/port/GeoIP/wallet behaviour) replaces
+        # the hand-built network signal wherever a transaction has metadata.
+        master["network_ip_signal"] = master["metadata_score"].where(
+            master["has_metadata"], master["network_ip_signal"]
+        )
         master["composite_score"] = ranker.compute_composite_score(
             master["anomaly_score"],
             master["community_illicit_ratio"],
@@ -222,13 +266,26 @@ def run_pipeline(
         output_dir.mkdir(parents=True, exist_ok=True)
         transactions = master[
             [
-                ELLIPTIC_TX_ID, "timestep", "class_label", "has_synthetic_layer", "has_network_layer",
+                ELLIPTIC_TX_ID, "timestep", "class_label", "has_synthetic_layer", "has_network_layer", "has_metadata",
                 "community_id", "degree", "pagerank", "anomaly_score", "risk_score",
                 "network_ip_signal", "composite_score",
             ]
         ].copy()
         transactions["has_synthetic_layer"] = transactions["has_synthetic_layer"].fillna(False).astype(bool)
         transactions["has_network_layer"] = transactions["has_network_layer"].fillna(False).astype(bool)
+        transactions["has_metadata"] = transactions["has_metadata"].astype(bool)
+        if meta_result is not None:
+            top_wallets = int(config.get("metadata", {}).get("entity_alerts", 500))
+            wallets = metadata_model.finalise_evidence(
+                meta_result, set(alerts[ELLIPTIC_TX_ID].astype(int)), top_wallets
+            )
+            graph = meta_result.graph
+            tx_meta = graph.transactions.reindex(columns=list(TX_METADATA_COLUMNS))
+            tx_meta.to_parquet(output_dir / "tx_metadata.parquet", index=False)
+            graph.tx_io.to_parquet(output_dir / "tx_io.parquet", index=False)
+            graph.addresses.to_parquet(output_dir / "addresses.parquet", index=False)
+            graph.ips.to_parquet(output_dir / "ips.parquet", index=False)
+            wallets.to_parquet(output_dir / "entities.parquet", index=False)
         transactions.to_parquet(output_dir / "transactions.parquet", index=False)
         alerts.to_parquet(output_dir / "alerts.parquet", index=False)
         evidence.to_parquet(output_dir / "evidence.parquet", index=False)
@@ -257,6 +314,7 @@ def run_pipeline(
                 "network_pct": round(100 * float(master["has_network_layer"].fillna(False).mean()), 2),
             },
             "feature_count": int(matrix.shape[1]),
+            "metadata": meta_result.metrics if meta_result is not None else None,
             "timings_s": timings,
         }
         (output_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
