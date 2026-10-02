@@ -12,9 +12,12 @@ from tui.store import Store
 from tui.widgets.logo import BITCRAFT_LOGO, BITCRAFT_TAGLINE
 
 
-def test_logo_is_pure_ascii() -> None:
-    """Logo must render on every terminal; no Unicode block characters."""
-    assert BITCRAFT_LOGO.isascii()
+def test_logo_is_solid_block_wordmark() -> None:
+    """Logo is solid block letters with box-drawing shadows, six rows tall."""
+    rows = BITCRAFT_LOGO.split("\n")
+    assert len(rows) == 6
+    assert "█" in BITCRAFT_LOGO
+    assert set(BITCRAFT_LOGO) <= set("█╗╔╝╚║═ \n")
     assert "BitCraft" not in BITCRAFT_LOGO  # wordmark is the glyphs themselves
     assert "Bitcoin" in BITCRAFT_TAGLINE
 
@@ -51,3 +54,29 @@ async def test_splash_to_dashboard_to_graph() -> None:
         assert isinstance(app.screen, GraphExplorerScreen)
         await pilot.press("d")
         assert isinstance(app.screen, DashboardScreen)
+
+
+def test_real_run_reaches_threats_without_errors() -> None:
+    """A real app.run() (not run_test) must start and navigate cleanly.
+
+    run_test did not reproduce the startup ScreenStackError that the filter
+    Inputs raised under Textual's eager tasks; only a real run did.
+    """
+    app = BitCraftApp(
+        store=Store(
+            provider=DemoProvider(simulate_latency=False),
+            is_demo=True,
+            fast_boot=True,
+            boot_log=["test"],
+        )
+    )
+
+    def script() -> None:
+        app.set_timer(0.3, app.enter_from_splash)
+        app.set_timer(1.5, app.action_show_threats)
+        app.set_timer(2.0, app.action_show_dashboard)
+        app.set_timer(2.5, app.exit)
+
+    app.call_later(script)
+    app.run(headless=True, size=(140, 42))
+    assert app.return_code == 0
