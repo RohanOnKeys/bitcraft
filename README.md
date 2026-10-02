@@ -1,237 +1,190 @@
-![BitCraft](docs/images/splash.png)
+![BitCraft](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/splash.png)
 
 # BitCraft
 
-AI Powered Monitoring & Analysis of Bitcoin Transaction Traffic Software
+[![PyPI](https://img.shields.io/pypi/v/bitcraft)](https://pypi.org/project/bitcraft/)
+[![Python](https://img.shields.io/pypi/pyversions/bitcraft)](https://pypi.org/project/bitcraft/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/RohanOnKeys/bitcraft/blob/main/LICENSE)
 
-BitCraft is an offline Bitcoin intelligence platform that correlates blockchain transactions with network metadata to generate explainable investigative leads. It ingests bulk transaction datasets, builds an entity graph linking wallets, IPs, and transactions, applies AI and graph analysis to detect suspicious behavior, and presents prioritized alerts through a terminal-based investigation dashboard (TUI).
+AI-powered monitoring and analysis of Bitcoin transaction traffic, in your terminal.
 
-The project is designed for Linux and operates entirely offline on synthetic datasets modeled after real Bitcoin transaction and P2P network activity.
+BitCraft correlates blockchain transactions (wallets, txids, amounts) with network metadata (IPs, ports, timing, GeoIP country and ASN), clusters wallets, scores every transaction with machine learning, and presents ranked, explainable investigative leads in a terminal dashboard. It runs fully offline on Linux, Windows and macOS.
+
+Built for Smart India Hackathon 2026, problem statement SIH26146 (NTRO, Blockchain & Cybersecurity).
 
 ---
 
-## Background
+## Installation
 
-Bitcoin's pseudonymous peer to peer architecture enables legitimate financial activity, but it also allows ransomware payments, darknet market proceeds, extortion, and money laundering to move across the network with limited traditional financial oversight.
+BitCraft needs Python 3.10 or newer.
 
-BitCraft addresses this challenge by combining blockchain layer data with network layer observations. Instead of analyzing transactions in isolation, it reconstructs relationships between wallets, IP addresses, and transaction timing to uncover suspicious patterns that would otherwise remain hidden.
+| Method | Command | What you get |
+| --- | --- | --- |
+| pipx (recommended) | `pipx install bitcraft` | The `bitcraft` command in its own isolated environment |
+| pip | `pip install bitcraft` | The `bitcraft` command |
+| From source | `git clone https://github.com/RohanOnKeys/bitcraft && cd bitcraft && pip install -e .` | The TUI plus the ML pipeline and API code |
+| Docker (Linux) | `docker compose up --build` | Full stack: pipeline, PostgreSQL, Redis and the API |
+| Air-gapped Linux | `python packages/offline_bundle.py` | A bundle with every wheel, image and dataset, installed with `bash install.sh` on a machine with no network |
+
+The pip and pipx packages contain the terminal interface. It connects to a BitCraft API at `http://localhost:8000` and falls back to built-in demo data when none is running. The ML pipeline and API run from a source checkout or Docker (see [Running the full system](#running-the-full-system)).
+
+A Chocolatey package (`choco install bitcraft`) is prepared in [`packages/chocolatey`](https://github.com/RohanOnKeys/bitcraft/tree/main/packages/chocolatey) and not yet published to the community repository.
+
+---
+
+## Quick start
+
+```text
+bitcraft demo          # opens BitCraft in a new, large terminal window with demo data
+bitcraft               # same, using the API when it is running
+bitcraft here          # run inside the current terminal
+bitcraft status        # API health, data counts and pipeline status
+bitcraft --help        # every command and option
+```
+
+Press **Enter** on the home screen, then use **d** dashboard, **t** threats, **g** graph explorer, **w** wallets, **Enter** on an alert for its detail, **Esc** to go back and **q** to quit. A terminal of 160 x 46 characters or larger shows every panel; Windows Terminal, a modern Linux terminal or iTerm2 look best.
+
+![Boot: data source, pipeline and alert checks while BitCraft starts](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/boot.png)
 
 ---
 
 ## Features
 
-- Bulk ingestion of CSV, JSON, and XML datasets
-- Bitcoin transaction and metadata parsing
-- Entity graph connecting wallets, IPs, ports, and transactions
-- AI powered anomaly detection
-- Wallet and transaction clustering
-- Explainable alerts with confidence scores
-- Terminal-based investigation dashboard (TUI) for link analysis
-- Fully offline Linux compatible workflow
+- Bulk ingestion of transaction and network metadata from CSV, JSON, JSON Lines and XML, with per-row validation
+- Offline GeoIP enrichment (country, ASN, organisation) from the open DB-IP Lite databases
+- Entity graph linking IP addresses, wallet addresses and transactions
+- Wallet clustering with the common-input-ownership heuristic, and Louvain transaction communities
+- Machine learning detection: a supervised risk model, a metadata model and an Isolation Forest, fused into one score
+- Ranked, explainable alerts for transactions and wallets, each with a confidence score, SHAP reasons and evidence tagged real or modeled
+- Terminal dashboard with link analysis, threat overview, wallet investigation and alert detail
+- Fully offline at runtime; Linux verified end to end with Docker
 
-![Dashboard: KPIs, filters, ranked alerts and a live preview of the selected alert](docs/images/dashboard.png)
+![Dashboard: KPIs, filters, ranked alerts and a live preview of the selected alert](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/dashboard.png)
+
+---
+
+## How it works
+
+1. **Ingest** CSV, JSON or XML metadata and reject malformed rows with a reason.
+2. **Enrich** every source and destination IP with GeoIP country and ASN, and flag Tor-exit and hosting networks.
+3. **Build the graph**: addresses, transactions and IPs, plus the 203,769-node transaction graph and its communities.
+4. **Cluster wallets**: addresses spent together in one transaction belong to the same owner.
+5. **Score**: a gradient-boosted risk model, a metadata model on the correlated network and blockchain features, community illicit ratios and an Isolation Forest are fused into a composite score.
+6. **Explain**: SHAP reasons and plain-language evidence for every alert, each item tagged real or modeled.
+7. **Serve and show**: results load into SQLite or PostgreSQL behind a read-only FastAPI service that the TUI reads.
+
+No ML code runs at request time; the pipeline writes its results once and the API only reads them.
+
+![Graph explorer: live connectivity graph with timestep, severity, driver and community charts](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/graph.png)
 
 ---
 
 ## Dataset
 
-BitCraft works with synthetic datasets modeled on real Bitcoin transaction fields.
+The problem statement calls for a synthetic dataset modeled on real Bitcoin P2P and transaction fields. BitCraft generates it (`python -m ml.metadata_generator`) on top of a labeled, Elliptic-derived base dataset, with every minimum field:
 
-![Wallets: address clusters with their IPs, ports, GeoIP country and ASN](docs/images/wallets.png)
-
-### Supported Fields
-
-- `timestamp`
-- `src_ip`
-- `dst_ip`
-- `src_port`
-- `dst_port`
-- `txid`
-- `input_addresses[]`
-- `output_addresses[]`
-- `input_amounts[]`
-- `output_amounts[]`
-- `fee`
-- `script_type`
-- `geo_country`
-- `asn`
-
-GeoIP enrichment uses downloadable open source GeoIP databases.
-
----
-
-## Objectives
-
-- Ingest and parse bulk Bitcoin transaction metadata.
-- Correlate network layer and blockchain layer data.
-- Build relationships between wallets, IP addresses, and transactions.
-- Detect suspicious behavior using AI and machine learning.
-- Generate explainable alerts with confidence scores.
-- Provide investigators with a clear view of suspicious entities through a terminal-based dashboard.
-
-![Threats: posture, top-25 queue with drivers, riskiest communities and coverage gaps](docs/images/threats.png)
-
----
-
-## AI and Graph Analysis
-
-BitCraft combines graph analytics with machine learning rather than relying solely on rule based detection.
-
-Planned capabilities include:
-
-- Entity clustering
-- Transaction anomaly detection
-- Suspicious transaction chain identification
-- Temporal behavior analysis
-- Wallet relationship discovery
-- Network correlation between blockchain activity and observed IP metadata
-
-Every alert includes supporting evidence and a confidence score.
-
-![Graph explorer: live connectivity graph with timestep, severity, driver and community charts](docs/images/graph.png)
-
----
-
-## Project Structure
-
-```text
-bitcraft/
-├── datasets/
-├── docs/
-├── plans/
-├── src/
-├── tests/
-└── README.md
-```
-
----
-
-## Getting Started
-
-### Install and run
-
-```text
-pip install bitcraft          # any OS, Python 3.10+
-choco install bitcraft        # Windows (Chocolatey)
-bitcraft                      # opens BitCraft in a new, large terminal window
-```
-
-![Boot: data source, pipeline and alert checks while BitCraft starts](docs/images/boot.png)
-
-From a clone, `pip install -e .` gives you the same `bitcraft` command, or
-run `bitcraft.bat` / `./bitcraft.sh` / `./bitcraft.ps1` straight from the repo
-root without installing anything.
-
-| Command | What it does |
+| Field | Example |
 | --- | --- |
-| `bitcraft` | New window (Windows Terminal, else Command Prompt; gnome-terminal, konsole, kitty, alacritty or xterm on Linux; Terminal.app on macOS) |
-| `bitcraft demo` | Same, with built-in demo data |
-| `bitcraft here` | Run inside the current terminal |
-| `bitcraft status` | Check the API and the last pipeline run |
-| `bitcraft run --api-url URL --size 200x60` | Pick a backend and window size |
+| `timestamp` | `2025-01-01T00:00:51Z` |
+| `src_ip`, `dst_ip` | `185.220.101.22`, `81.7.151.252` |
+| `src_port`, `dst_port` | `9150`, `8333` |
+| `txid` | 64 hex characters |
+| `input_addresses[]`, `output_addresses[]` | Bitcoin addresses with valid checksums |
+| `input_amounts[]`, `output_amounts[]` | BTC, one per address |
+| `fee`, `script_type` | `0.00025`, `p2wpkh` |
+| `geo_country`, `asn` | Added offline from DB-IP Lite: `DE`, `AS60729` |
 
-Inside a source checkout with a loaded database, `bitcraft` also starts the
-API in the background and stops it when you quit. Release builds:
-`python packages/build_package.py` (wheel, sdist and the Chocolatey
-package).
+Counts, amounts, fees, timestamps and labels come from the base dataset. Wallets, addresses, routable IPs and ports are synthesised, with laundering typologies planted (with noise) on illicit activity: address reuse, peeling chains, CoinJoin-style mixing, Tor and hosting egress, multi-country IP hopping and round payouts. The 50,000 records ship as CSV, JSON and XML, with GeoIP-enriched versions from `python -m ml.ingest FILE --enrich --out FILE`.
 
-### Model and backend (live data)
+![Wallets: address clusters with their IPs, ports, GeoIP country and ASN](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/wallets.png)
 
-The dataset is the private Kaggle dataset
-`rosalinnayak/bitcoin-transaction-traffic`. Put its five CSVs in
-`datasets/` (git-ignored), then:
+---
+
+## Results
+
+Held-out timesteps 35 to 49, never seen in training (16,670 labeled transactions, 6.5% illicit):
+
+| Score | AUC | Avg precision | Precision@100 | Precision@500 |
+| --- | ---: | ---: | ---: | ---: |
+| Isolation Forest alone | 0.197 | 0.037 | 0.00 | 0.00 |
+| Risk model alone | 0.940 | 0.803 | 1.00 | 1.00 |
+| **Composite (shipped ranking)** | **0.899** | **0.812** | **1.00** | **0.994** |
+
+On the metadata layer the model reaches AUC 0.969, wallet clustering purity is 0.999, and 98% of the top 100 wallet alerts are illicit owners. That layer is synthetic, so those numbers measure recovery of the planted typologies rather than real-world accuracy. The [model card](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/model_card.md) explains the model choice and the leakage guards.
+
+![Threats: posture, top-25 queue with drivers, riskiest communities and coverage gaps](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/threats.png)
+
+---
+
+## Running the full system
+
+From a source checkout, with the dataset CSVs in `datasets/`:
 
 ```text
 pip install -r requirements.txt -r backend/requirements.txt
-python -m ml.geoip download               # one-time: DB-IP Lite country + ASN databases
-python -m ml.metadata_generator           # challenge-format metadata (CSV, JSON, XML)
-python -m ml.pipeline                     # ~5 min first run, writes ml/artifacts/
-cd backend && python -m app.loader        # loads artifacts into backend/bitcraft.db
-bitcraft                                  # starts the API and opens the TUI
+pip install -e .
+python -m ml.geoip download            # one time: DB-IP Lite country and ASN databases
+python -m ml.metadata_generator        # challenge-format metadata (CSV, JSON, XML)
+python -m ml.pipeline                  # about 5 minutes; writes ml/artifacts/
+cd backend && python -m app.loader     # loads the results into backend/bitcraft.db
+bitcraft                               # starts the API and opens the TUI
 ```
 
-The metadata layer carries the challenge's minimum fields (timestamp,
-src/dst IP and port, txid, input/output addresses and amounts, fee, script
-type). `python -m ml.ingest FILE` validates any CSV, JSON or XML file in
-that shape; GeoIP adds country and ASN offline.
+With no `DATABASE_URL`, the API uses a local SQLite file and Redis is optional. `docker compose up --build` runs the same pipeline on PostgreSQL and Redis and serves the API on port 8000. Interactive API docs are at `http://localhost:8000/docs`.
 
-With no `DATABASE_URL` the API uses a local SQLite file, and Redis is
-optional. For the full PostgreSQL + Redis stack, use `docker compose up --build`:
-the `ml` service runs the pipeline, then `backend` loads the results and
-serves on port 8000.
-
-API: `/alerts`, `/alerts/{tx_id}`, `/graph/{tx_id}?depth=`, `/communities`,
-`/communities/{id}`, `/entities`, `/entities/{id}`, `/entities/{id}/graph`,
-`/addresses/{address}`, `/ips/{ip}`, `/metadata/{tx_id}`, `/stats/summary`,
-`/threats/overview`, `/pipeline/status`, `/pipeline/metrics`. Interactive docs
-at `http://localhost:8000/docs`.
-
-Full instructions: [docs/user_manual.md](docs/user_manual.md). Approach,
-model choice and explainability: [docs/technical_writeup.md](docs/technical_writeup.md).
-Model details and held-out metrics: [docs/model_card.md](docs/model_card.md).
-
-### Terminal UI (demo mode)
-
-```text
-pip install -r bitcraft/requirements.txt
-python -m bitcraft.app --demo
-```
-
-Other data sources:
-
-```text
-python -m bitcraft.app --api
-python -m bitcraft.app
-```
-
-`--demo` forces synthetic data. `--api` talks to FastAPI at
-`http://localhost:8000` (override with `--api-url`). Default `auto`
-probes `/health` and falls back to demo.
-
-Keys: Enter (boot/detail), d dashboard, t threats, g graph, Esc home, q quit.
-
-Demo mode always shows a `DEMO DATA` badge. It is not live pipeline output.
-
-Minimum terminal size: 100 columns by 30 rows.
+API: `/alerts`, `/alerts/{tx_id}`, `/graph/{tx_id}?depth=`, `/communities`, `/communities/{id}`, `/entities`, `/entities/{id}`, `/entities/{id}/graph`, `/addresses/{address}`, `/ips/{ip}`, `/metadata/{tx_id}`, `/stats/summary`, `/threats/overview`, `/pipeline/status`, `/pipeline/metrics`.
 
 ---
 
-## Expected Output
+## Explainable alerts
 
-BitCraft produces:
+Every alert shows its composite score, the weighted drivers behind it, the correlated network and blockchain metadata (txid, source and peer IP:port, GeoIP country and ASN, Tor flag, inputs and outputs, wallet), evidence tagged real or modeled, and SHAP reasons. Missing network evidence is shown as `n/a`, never as low risk.
 
-- Parsed and correlated transaction data
-- Entity relationship graphs
-- Ranked suspicious wallets and transactions
-- Explainable AI generated alerts
-- Terminal-based investigation dashboard (TUI)
-
-![Alert detail: composite score, drivers, network and blockchain metadata, evidence and SHAP reasons](docs/images/detail.png)
+![Alert detail: composite score, drivers, network and blockchain metadata, evidence and SHAP reasons](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/detail.png)
 
 ---
 
-## Tech Stack
+## Documentation
 
-Planned technologies include:
+| Document | Contents |
+| --- | --- |
+| [User manual](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/user_manual.md) | Install, data, pipeline, API, TUI, offline deployment, troubleshooting |
+| [Technical writeup](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/technical_writeup.md) | Approach, model choice, explainability and results |
+| [Model card](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/model_card.md) | Models, evaluation protocol, metrics and limitations |
+| [Dataset provenance](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/dataset_provenance.md) | What is real, what is synthetic, GeoIP attribution |
+| [Submission checklist](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/submission.md) | Each requirement of SIH26146 and where it is met |
 
-- Python
-- NetworkX
-- FastAPI
-- PostgreSQL
-- Redis
-- GeoIP databases
-- Machine learning libraries
-- Textual (terminal UI framework)
+---
+
+## Project structure
+
+```text
+bitcraft/     terminal interface and the `bitcraft` command (the pip package)
+ml/           ingestion, GeoIP, entity graph, models, scoring, explainability, pipeline
+backend/      FastAPI service and the artifact loader
+packages/     PyPI and Chocolatey packaging, air-gapped bundle builder
+docs/         manual, writeup, model card, provenance, screenshots
+tests/        ML, backend and TUI tests
+datasets/     local data (not in git)
+```
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Data and features | pandas, PyArrow, NetworkX, python-louvain |
+| Machine learning | scikit-learn (HistGradientBoosting, Isolation Forest), SHAP |
+| GeoIP | DB-IP Lite (MMDB) via maxminddb |
+| API and storage | FastAPI, SQLAlchemy, SQLite or PostgreSQL, Redis |
+| Terminal interface | Textual, Rich |
+| Packaging | PyPI, Chocolatey, Docker Compose |
 
 ---
 
 ## License
 
-BitCraft is open source under the [Apache License 2.0](LICENSE).
+BitCraft is open source under the [Apache License 2.0](https://github.com/RohanOnKeys/bitcraft/blob/main/LICENSE). Copyright 2026 The BitCraft Authors: Rohan Pattanayak, Jagadish Pattnaik, Shreya Mishra, Shreya Mohanty, Ashutosh Badapada and Rosalin Nayak. See [NOTICE](https://github.com/RohanOnKeys/bitcraft/blob/main/NOTICE).
 
-Copyright 2026 The BitCraft Authors: Rohan Pattanayak, Jagadish Pattnaik,
-Shreya Mishra, Shreya Mohanty, Ashutosh Badapada and Rosalin Nayak.
-See [NOTICE](NOTICE).
-
-The Elliptic-derived dataset is distributed separately and is not covered
-by this license.
+IP geolocation by [DB-IP](https://db-ip.com), licensed CC BY 4.0. The Elliptic-derived dataset is distributed separately and is not covered by this license.
