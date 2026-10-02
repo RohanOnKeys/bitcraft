@@ -24,7 +24,7 @@ from tui.widgets.chart_panels import (
     score_gauge,
     severity_colour,
 )
-from tui.widgets.charts import MUTED, PINK, SALMON, TEXT, YELLOW, hbar
+from tui.widgets.charts import CHROME, MUTED, PINK, SALMON, TEXT, YELLOW, hbar
 from tui.widgets.graph_view import GraphView
 from tui.widgets.header_bar import HeaderBar
 from tui.widgets.mascot import NATIVE_WIDTH, Mascot
@@ -134,6 +134,37 @@ class AlertDetailScreen(Screen):
             text.append(f" {name} ", Style(color="#000000", bgcolor=YELLOW if on else "#3a3228", bold=True))
             text.append(" ")
         text.append("\n")
+        meta = detail.metadata
+        if meta is not None:
+            heading("network ↔ blockchain metadata")
+            label("txid")
+            text.append(f"{meta.txid}\n", Style(color=YELLOW))
+            label("source")
+            src_style = Style(color=SALMON if meta.tor else TEXT, bold=True)
+            text.append(f"{meta.src_ip}:{meta.src_port}", src_style)
+            text.append(f"  {meta.src_country or '--'}  {meta.src_asn_org or ''}", Style(color=MUTED))
+            if meta.tor:
+                text.append("  TOR", Style(color="#000000", bgcolor=PINK, bold=True))
+            text.append("\n")
+            label("peer")
+            text.append(f"{meta.dst_ip}:{meta.dst_port}", Style(color=TEXT))
+            text.append(f"  {meta.dst_country or '--'}\n", Style(color=MUTED))
+            label("shape")
+            text.append(
+                f"{meta.n_inputs} in / {meta.n_outputs} out · {meta.total_in_btc:.4f} BTC · fee {meta.fee:.8f}"
+                f" · {meta.script_type or '?'}\n",
+                Style(color=TEXT),
+            )
+            if meta.peel_chain_len >= 2:
+                label("peel chain")
+                text.append(f"step {meta.peel_chain_len}\n", Style(color=SALMON, bold=True))
+            label("wallet")
+            wallet = f"{meta.entity_id}"
+            if meta.entity_rank is not None:
+                wallet += f"  rank {meta.entity_rank}  risk {meta.entity_risk or 0:.2f}"
+            text.append(wallet + "  (press w for wallets)\n", Style(color=CHROME, bold=True))
+            label("meta score")
+            text.append(f"{meta.metadata_score:.3f}\n", Style(color=YELLOW, bold=True))
         heading("evidence")
         text.append(detail.evidence_text + "\n", Style(color=TEXT))
         for item in detail.evidence_items or []:
