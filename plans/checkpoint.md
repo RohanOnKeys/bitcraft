@@ -22,7 +22,10 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
   packaging; air-gapped Linux bundle (`packages/offline_bundle.py`);
   Apache 2.0 license with NOTICE.
 - Docs: user manual, technical writeup, model card, dataset provenance,
-  submission checklist (`docs/submission.md`), screenshots in `docs/images/`.
+  submission checklist (`docs/submission.md`), screenshots in `docs/images/`,
+  architecture with Mermaid diagrams (system, pipeline, fusion, data and
+  database relationships, entity graph, request flow, TUI navigation,
+  deployment); no draft or TODO sections left.
 - Generated metadata, plain and GeoIP-enriched, on Kaggle as
   `rohanllm/bitcraft-bitcoin-metadata`.
 - Datasets packaged: base tables, metadata and GeoIP attached to GitHub

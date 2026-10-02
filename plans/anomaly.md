@@ -86,3 +86,9 @@ Recall 0.97, precision 0.41: ordinary licit payments with one small output
 look like peeling steps. Chain length is the stronger signal and is what
 the wallet evidence reports.
 
+
+## Threats network toggle key is shadowed
+
+The threats screen binds `w` to the network-evidence toggle, but the app
+binds `w` to the wallets page with `priority=True`, which wins. The toggle
+is unreachable from the keyboard; it needs a free key.
