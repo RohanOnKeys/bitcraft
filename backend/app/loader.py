@@ -21,7 +21,18 @@ from sqlalchemy import insert
 from app.core import redis_client
 from app.core.config import settings
 from app.core.database import Base, engine
-from app.models import Alert, AlertEvidence, Community, GraphEdge, Transaction
+from app.models import (
+    Address,
+    Alert,
+    AlertEvidence,
+    Community,
+    Entity,
+    GraphEdge,
+    IpNode,
+    Transaction,
+    TxIO,
+    TxMetadata,
+)
 
 BATCH = 20_000
 
@@ -47,6 +58,22 @@ def _json_column(series: pd.Series) -> pd.Series:
     return series.map(lambda v: json.loads(v) if isinstance(v, str) else None)
 
 
+def _model_columns(model, frame: pd.DataFrame) -> pd.DataFrame:
+    """Keep only columns the table defines (artifacts may carry extras)."""
+    wanted = [c.name for c in model.__table__.columns if c.name in frame.columns]
+    return frame[wanted]
+
+
+# Optional metadata-layer artifacts -> (model, JSON columns).
+METADATA_TABLES = {
+    "entities": (Entity, ("countries", "evidence_items", "shap_reasons")),
+    "addresses": (Address, ()),
+    "ips": (IpNode, ()),
+    "tx_metadata": (TxMetadata, ()),
+    "tx_io": (TxIO, ()),
+}
+
+
 def load_artifacts(artifacts_dir: Path) -> dict[str, int]:
     """Drop, recreate and fill every table from artifacts_dir. Returns row counts."""
     read = lambda name: pd.read_parquet(artifacts_dir / f"{name}.parquet")  # noqa: E731
@@ -56,6 +83,8 @@ def load_artifacts(artifacts_dir: Path) -> dict[str, int]:
     tx["class_label"] = tx["class_label"].astype("Int64")
     tx["community_id"] = tx["community_id"].astype("Int64")
     tx["degree"] = tx["degree"].astype("Int64")
+    if "has_metadata" not in tx.columns:
+        tx["has_metadata"] = False
     alerts = read("alerts")
     evidence = read("evidence")
     evidence["shap_reasons"] = _json_column(evidence["shap_reasons"])
@@ -69,11 +98,21 @@ def load_artifacts(artifacts_dir: Path) -> dict[str, int]:
     Base.metadata.create_all(engine)
     counts: dict[str, int] = {}
     with engine.begin() as conn:
-        counts["transactions"] = _insert(conn, Transaction, tx)
+        counts["transactions"] = _insert(conn, Transaction, _model_columns(Transaction, tx))
         counts["alerts"] = _insert(conn, Alert, alerts)
         counts["alert_evidence"] = _insert(conn, AlertEvidence, evidence)
         counts["communities"] = _insert(conn, Community, communities)
         counts["graph_edges"] = _insert(conn, GraphEdge, edges)
+        for name, (model, json_columns) in METADATA_TABLES.items():
+            path = artifacts_dir / f"{name}.parquet"
+            if not path.exists():
+                continue
+            frame = pd.read_parquet(path)
+            for column in json_columns:
+                frame[column] = _json_column(frame[column])
+            if name == "tx_metadata":
+                frame["elliptic_tx_id"] = frame["elliptic_tx_id"].astype("Int64")
+            counts[model.__tablename__] = _insert(conn, model, _model_columns(model, frame))
 
     redis_client.cache_clear()
     status_file = artifacts_dir / "pipeline_status.json"
