@@ -287,10 +287,6 @@ ProgressBar Bar > .bar--complete {
     min-height: 8;
 }
 
-#dashboard-mascot {
-    margin: 0 0 0 1;
-}
-
 .filter-label {
     color: #8a8078;
     margin-top: 1;
@@ -348,10 +344,6 @@ ProgressBar Bar > .bar--complete {
     min-height: 10;
 }
 
-#detail-mascot {
-    margin: 0 0 0 1;
-}
-
 #graph-page {
     width: 100%;
     height: 1fr;
@@ -390,8 +382,10 @@ ProgressBar Bar > .bar--complete {
     padding: 0 1;
 }
 
-#graph-mascot {
-    margin: 0 0 0 1;
+#graph-side #graph-drivers {
+    width: 100%;
+    height: 1fr;
+    margin: 1 0 0 0;
 }
 
 #graph-bottom {
@@ -479,12 +473,8 @@ ProgressBar Bar > .bar--complete {
 
 #threat-drivers {
     width: 100%;
-    height: auto;
+    height: 1fr;
     padding: 0 1;
-}
-
-#threat-mascot {
-    margin: 1 0 0 1;
 }
 
 #threat-communities {
@@ -562,13 +552,32 @@ ProgressBar Bar > .bar--complete {
     min-height: 8;
 }
 
-#wallet-mascot {
-    margin: 0 0 0 1;
-}
-
 #wallet-txs {
     height: 9;
     padding: 0 1;
+}
+
+/* --- Mini frogs on the loading screens (tui/widgets/mini_frog.py) ----- */
+
+.mini-frog {
+    margin: 0 1;
+}
+
+#splash-frogs {
+    width: 100%;
+    height: 7;
+    align: center middle;
+    margin-top: 1;
+}
+
+#boot-log-row {
+    width: 100%;
+    height: auto;
+    align: center top;
+}
+
+#boot-log-row .mini-frog {
+    margin: 1 2;
 }
 
 /* --- Shared ----------------------------------------------------------- */
