@@ -1,4 +1,4 @@
-"""Pydantic schemas for the /pipeline/status endpoint."""
+"""Pydantic schemas for the /pipeline endpoints."""
 
 from pydantic import BaseModel
 
@@ -10,3 +10,4 @@ class PipelineStatus(BaseModel):
     started_at: str | None = None
     finished_at: str | None = None
     error: str | None = None
+    stage: str | None = None
