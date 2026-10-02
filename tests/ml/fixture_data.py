@@ -38,24 +38,28 @@ def write_fixture_dataset(out_dir: Path, n_tx: int = 2000, seed: int = 42) -> Pa
     syn_ids = [f"SYN_TX_{i:06d}" for i in range(n_syn)]
     linked = rng.choice(tx_ids, n_syn, replace=False)
     countries = ["US", "DE", "RU", "NL", "SG", "BR", "IN", "GB"]
+    linked_label = dict(zip(tx_ids, label))
+    linked_step = dict(zip(tx_ids, timestep))
+    in_value = rng.exponential(1.0, n_syn).round(8)
+    fee = rng.exponential(0.0005, n_syn).round(8)
     pd.DataFrame(
         {
             "synthetic_transaction_id": syn_ids,
-            "timestamp": pd.Timestamp("2026-01-01") + pd.to_timedelta(rng.integers(0, 10**6, n_syn), unit="s"),
-            "block_number": rng.integers(600_000, 700_000, n_syn),
+            "timestep": [linked_step[t] for t in linked],
+            "timestamp": (pd.Timestamp("2025-01-01", tz="UTC") + pd.to_timedelta(rng.integers(0, 10**7, n_syn), unit="s")).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "block_number": rng.integers(830_000, 900_000, n_syn),
             "input_count": rng.integers(1, 6, n_syn),
             "output_count": rng.integers(1, 8, n_syn),
-            "input_value_btc": rng.exponential(1.0, n_syn).round(6),
-            "output_value_btc": rng.exponential(1.0, n_syn).round(6),
-            "fee_btc": rng.exponential(0.0005, n_syn).round(8),
+            "input_value_btc": in_value,
+            "output_value_btc": (in_value - fee).round(8),
+            "fee_btc": fee,
             "source_country": rng.choice(countries, n_syn),
             "source_asn": rng.integers(1000, 1100, n_syn),
             "destination_country": rng.choice(countries, n_syn),
             "destination_asn": rng.integers(1000, 1100, n_syn),
-            "is_coinbase": False,
-            "tx_size_bytes": rng.integers(200, 2000, n_syn),
+            "class_label": [linked_label[t] for t in linked],
             "data_source": "synthetic",
-            "generation_method": "statistical",
+            "generation_method": "synthetic_distribution_sampling",
         }
     ).to_csv(out_dir / "transactions.csv", index=False)
 
@@ -87,9 +91,9 @@ def write_fixture_dataset(out_dir: Path, n_tx: int = 2000, seed: int = 42) -> Pa
                     "destination_asn": int(rng.integers(1000, 1100)),
                     "connection_duration_sec": float(rng.exponential(30)),
                     "peer_count": int(rng.integers(1, 40)),
-                    "protocol": "tcp",
-                    "timestamp": "2026-01-01T00:00:00Z",
+                    "timestamp": "2025-01-01T00:00:00Z",
                     "data_source": "synthetic",
+                    "generation_method": "synthetic_rule_based",
                 }
             )
             obs += 1
