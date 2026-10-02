@@ -2,21 +2,39 @@
 
 from __future__ import annotations
 
+from rich.style import Style
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Static
 
 from tui.helpers.drivers import primary_driver, weighted_parts
-from tui.helpers.format import score_bar
 from tui.helpers.severity import severity_for_score
 from tui.providers.models import AlertQuery, AlertSummary, ProviderError
 from tui.screens.alert_detail import AlertDetailScreen
 from tui.widgets.community_table import CommunityTable
+from tui.widgets.chart_panels import DRIVER_COLOURS, driver_bars, severity_colour
+from tui.widgets.charts import (
+    CHROME,
+    GOLD,
+    MUTED,
+    PINK,
+    SALMON,
+    TEXT,
+    YELLOW,
+    column_chart,
+    gradient_bar,
+    hbar,
+)
 from tui.widgets.header_bar import HeaderBar
+from tui.widgets.mascot import NATIVE_WIDTH, Mascot
 from tui.widgets.stacked_bar import StackedBar
 
 CAVEAT = "No network evidence is not the same as low risk"
+# Room needed before the side column widens to hold the full-size frog.
+MASCOT_MIN_WIDTH = 150
+MASCOT_MIN_HEIGHT = 42
 
 
 class ThreatDetectionScreen(Screen):
@@ -50,16 +68,33 @@ class ThreatDetectionScreen(Screen):
             yield Static("", id="threat-posture")
             yield StackedBar(id="threat-stack")
             with Horizontal(id="threat-body"):
-                yield Static("", id="threat-queue")
-                yield Static("", id="threat-drivers")
-                yield CommunityTable(id="threat-communities")
-            yield Static("", id="threat-signals")
-            yield Static("", id="threat-coverage")
-            yield Static("", id="threat-timeline")
+                yield Static("", id="threat-queue", classes="panel")
+                with Vertical(id="threat-side"):
+                    yield Static("", id="threat-drivers", classes="panel")
+                    yield Mascot(
+                        "happy", art_width=NATIVE_WIDTH, idle=True, id="threat-mascot"
+                    )
+                yield CommunityTable(id="threat-communities", classes="panel")
+            with Horizontal(id="threat-bottom"):
+                yield Static("", id="threat-signals", classes="panel")
+                yield Static("", id="threat-coverage", classes="panel")
+                yield Static("", id="threat-timeline", classes="panel")
         yield Footer()
 
     def on_mount(self) -> None:
+        self._fit_mascot()
         self.refresh_view()
+
+    def on_resize(self, event) -> None:  # type: ignore[no-untyped-def]
+        self._fit_mascot()
+
+    def _fit_mascot(self) -> None:
+        roomy = (
+            self.size.width >= MASCOT_MIN_WIDTH
+            and self.size.height >= MASCOT_MIN_HEIGHT
+        )
+        self.query_one("#threat-mascot").display = roomy
+        self.query_one("#threat-side").styles.width = NATIVE_WIDTH + 2 if roomy else 34
 
     def on_screen_resume(self) -> None:
         """Reload when switching back to the threats mode."""
@@ -84,6 +119,7 @@ class ThreatDetectionScreen(Screen):
         self._render_signals()
         self._render_coverage()
         self._render_timeline()
+        self._update_mascot()
 
     def _apply_local_filters(self) -> None:
         rows = list(self._queue)
@@ -98,7 +134,9 @@ class ThreatDetectionScreen(Screen):
             rows = [
                 r
                 for r in rows
-                if primary_driver(r.anomaly_score, r.community_risk, r.network_signal)
+                if primary_driver(
+                    r.anomaly_score, r.community_risk, r.network_signal, r.model_score
+                )
                 == self._driver_filter
             ]
         if self._network_only:
@@ -111,11 +149,25 @@ class ThreatDetectionScreen(Screen):
         if threat is None:
             self.query_one("#threat-posture", Static).update("posture: loading")
             return
-        self.query_one("#threat-posture", Static).update(
-            f"posture  critical={threat.critical_count}  "
-            f"no-network={threat.no_network_evidence_count}  "
-            f"high-illicit communities={threat.high_illicit_community_count}"
-        )
+        text = Text(no_wrap=True, end="")
+        text.append(" THREAT POSTURE ", Style(color="#000000", bgcolor=GOLD, bold=True))
+        text.append("   critical ", Style(color=MUTED))
+        text.append(f"{threat.critical_count:,}", Style(color=severity_colour("critical"), bold=True))
+        text.append("   high ", Style(color=MUTED))
+        text.append(f"{threat.high_count:,}", Style(color=severity_colour("high"), bold=True))
+        text.append("   no-network evidence ", Style(color=MUTED))
+        text.append(f"{threat.no_network_evidence_count:,}", Style(color=PINK, bold=True))
+        text.append("   high-illicit communities ", Style(color=MUTED))
+        text.append(f"{threat.high_illicit_community_count}", Style(color=YELLOW, bold=True))
+        text.append("   tab ", Style(color=MUTED))
+        text.append(f"[{self._severity_tab.upper()}]", Style(color=YELLOW, bold=True))
+        if self._driver_filter:
+            text.append("  driver ", Style(color=MUTED))
+            text.append(
+                self._driver_filter,
+                Style(color=DRIVER_COLOURS[self._driver_filter], bold=True),
+            )
+        self.query_one("#threat-posture", Static).update(text)
         stack = self.query_one("#threat-stack", StackedBar)
         stack.critical = threat.critical_count
         stack.high = threat.high_count
@@ -124,23 +176,45 @@ class ThreatDetectionScreen(Screen):
         stack.refresh()
 
     def _render_queue(self) -> None:
-        lines = ["threat queue (top 25)", "rank  tx           sev   score      driver"]
+        panel = self.query_one("#threat-queue", Static)
+        panel.border_title = f"threat queue · top {len(self._queue)}"
+        panel.border_subtitle = "j/k move · enter detail · g graph"
+        width = max(40, panel.content_size.width or 70)
+        text = Text(no_wrap=True, end="")
+        text.append(
+            f"  {'#':<4}{'tx':<12}{'sev':<6}{'score':<18}driver\n",
+            Style(color=GOLD, bold=True),
+        )
         for i, row in enumerate(self._queue):
             tier = row.severity or severity_for_score(row.composite_score)
             driver = primary_driver(
-                row.anomaly_score, row.community_risk, row.network_signal
+                row.anomaly_score, row.community_risk, row.network_signal, row.model_score
             )
-            marker = ">" if i == self._cursor else " "
-            lines.append(
-                f"{marker}{row.rank:<5} {row.elliptic_tx_id:<12} "
-                f"{tier[:4].upper():<5} {row.composite_score:.2f} "
-                f"{score_bar(row.composite_score, 8)}  {driver}"
+            selected = i == self._cursor
+            line = Text(no_wrap=True, end="")
+            line.append("▶ " if selected else "  ", Style(color=YELLOW, bold=True))
+            line.append(f"{row.rank:<4}", Style(color=MUTED))
+            line.append(
+                f"{row.elliptic_tx_id:<12}",
+                Style(color=YELLOW if selected else TEXT, bold=selected),
             )
+            line.append(f"{tier[:4].upper():<6}", Style(color=severity_colour(tier), bold=True))
+            line.append(f"{row.composite_score:.2f} ", Style(color=TEXT))
+            line.append_text(gradient_bar(row.composite_score, 12))
+            line.append("  ")
+            line.append(driver, Style(color=DRIVER_COLOURS.get(driver, TEXT), bold=True))
+            if selected:
+                line.pad_right(max(0, width - line.cell_len))
+                line.stylize(Style(bgcolor="#2a2210"))
+            text.append_text(line)
+            text.append("\n")
         if not self._queue:
-            lines.append("(empty)")
-        self.query_one("#threat-queue", Static).update("\n".join(lines))
+            text.append("(empty)", Style(color=MUTED))
+        panel.update(text)
 
     def _render_drivers(self) -> None:
+        panel = self.query_one("#threat-drivers", Static)
+        panel.border_title = "driver breakdown · crit/high mean"
         rows = [
             r
             for r in self._queue
@@ -151,40 +225,52 @@ class ThreatDetectionScreen(Screen):
             # Fall back to whole queue for demo visibility.
             rows = self._queue
         if not rows:
-            self.query_one("#threat-drivers", Static).update("drivers\n(no rows)")
+            panel.update("(no rows)")
             return
-        sums = {"ANOMALY": 0.0, "COMMUNITY": 0.0, "NETWORK": 0.0}
+        sums = {"MODEL": 0.0, "ANOMALY": 0.0, "COMMUNITY": 0.0, "NETWORK": 0.0}
         for r in rows:
-            parts = weighted_parts(r.anomaly_score, r.community_risk, r.network_signal)
+            parts = weighted_parts(
+                r.anomaly_score, r.community_risk, r.network_signal, r.model_score
+            )
             for k, v in parts.items():
                 sums[k] += v
         n = len(rows)
-        lines = ["driver breakdown (crit/high mean)"]
-        for key in ("ANOMALY", "COMMUNITY", "NETWORK"):
-            mean = sums[key] / n
-            lines.append(f"{key:<10} {mean:.3f} {score_bar(mean, 12)}")
-        self.query_one("#threat-drivers", Static).update("\n".join(lines))
+        means = [(k.lower(), sums[k] / n, DRIVER_COLOURS[k]) for k in sums]
+        bar_w = max(8, (panel.content_size.width or 30) - 18)
+        text = driver_bars(means, bar_w)
+        total = sum(v for _, v, _ in means) or 1
+        text.append("\n\nshare     ", Style(color=MUTED))
+        for _, v, color in means:
+            text.append("█" * max(1, round(v / total * bar_w)), Style(color=color))
+        text.append("\n")
+        lead = max(means, key=lambda m: m[1])
+        text.append(f"{n} alerts · ", Style(color=MUTED))
+        text.append(f"{lead[0]} leads", Style(color=lead[2], bold=True))
+        panel.update(text)
 
     def _selected(self) -> AlertSummary | None:
         if not self._queue:
             return None
         return self._queue[self._cursor]
 
+    def _update_mascot(self) -> None:
+        """Hop when the selection moves; the frog stays on its idle cycle."""
+        self.query_one("#threat-mascot", Mascot).hop()
+
     def _render_signals(self) -> None:
         row = self._selected()
         panel = self.query_one("#threat-signals", Static)
+        panel.border_title = "signals"
         if row is None:
-            panel.update("signals\n(no selection)")
+            panel.update("(no selection)")
             return
+        panel.border_subtitle = f"tx {row.elliptic_tx_id}"
         try:
             detail = self.app.store.provider.alert_detail(row.elliptic_tx_id)
         except ProviderError:
-            panel.update("signals\n(unavailable)")
+            panel.update("(unavailable)")
             return
-        if not detail.evidence_items:
-            panel.update(f"signals\n{detail.evidence_text}")
-            return
-        chips: list[str] = []
+        chips: list[tuple[str, bool]] = []
         for item in detail.evidence_items:
             label = item.label.lower()
             chip = None
@@ -202,10 +288,27 @@ class ThreatDetectionScreen(Screen):
             elif "hosting" in label:
                 chip = "HOSTING ASN"
             if chip:
-                chips.append(f"~{chip}" if modeled else chip)
-        panel.update("signals\n" + ("  ".join(chips) if chips else detail.evidence_text))
+                chips.append((chip, modeled))
+        if not chips:
+            panel.update(detail.evidence_text)
+            return
+        text = Text(end="")
+        palette = (YELLOW, SALMON, CHROME, PINK)
+        for i, (chip, modeled) in enumerate(chips):
+            label = f" ~{chip} " if modeled else f" {chip} "
+            text.append(
+                label,
+                Style(color="#000000", bgcolor=palette[i % len(palette)], bold=True),
+            )
+            text.append("  ")
+        text.append("\n\n")
+        text.append("~ modeled   ", Style(color=MUTED, italic=True))
+        text.append("plain = real evidence", Style(color=MUTED))
+        panel.update(text)
 
     def _render_coverage(self) -> None:
+        panel = self.query_one("#threat-coverage", Static)
+        panel.border_title = "coverage blind spots"
         top = self._queue[:25] if self._queue else []
         # Prefer full top-25 from provider for blind-spot stats.
         try:
@@ -213,16 +316,23 @@ class ThreatDetectionScreen(Screen):
             top = page.items
         except ProviderError:
             pass
+        n = max(1, len(top))
         no_net = sum(1 for r in top if not r.has_network_layer)
         no_syn = sum(1 for r in top if not r.has_synthetic_layer)
-        lines = [
-            "coverage blind spots",
-            f"top-25 lacking network evidence: {no_net}",
-            f"top-25 lacking synthetic layer: {no_syn}",
-        ]
+        text = Text(no_wrap=True, end="")
+        for label, count, color in (
+            ("no network  ", no_net, SALMON),
+            ("no synthetic", no_syn, PINK),
+        ):
+            text.append(f"{label} ", Style(color=MUTED))
+            text.append_text(hbar(count / n, 16, color))
+            text.append(f" {count}", Style(color=color, bold=True))
+            text.append(f"/{n} top\n", Style(color=MUTED))
         if no_net > 0:
-            lines.append(CAVEAT)
-        self.query_one("#threat-coverage", Static).update("\n".join(lines))
+            text.append("\n")
+            text.append("! ", Style(color=YELLOW, bold=True))
+            text.append(CAVEAT, Style(color=YELLOW, italic=True))
+        panel.update(text)
 
     def _render_timeline(self) -> None:
         threat = self.app.store.threat_overview
@@ -233,18 +343,22 @@ class ThreatDetectionScreen(Screen):
         panel.display = True
         series = threat.alerts_per_timestep
         peak_ts = max(series, key=series.get)
-        max_v = max(series.values()) or 1
-        # Compact sparkline across sorted timesteps.
         keys = sorted(series)
-        bars = []
-        glyphs = " .:-=+*#%@"
-        for k in keys:
-            idx = int(series[k] / max_v * (len(glyphs) - 1))
-            bars.append(glyphs[idx])
-        panel.update(
-            f"timeline  peak timestep={peak_ts} ({series[peak_ts]})\n"
-            + "".join(bars)
-        )
+        panel.border_title = "alerts per timestep"
+        panel.border_subtitle = f"peak t{peak_ts} · {series[peak_ts]}"
+        width = max(10, panel.content_size.width or 49)
+        values = [
+            float(series[keys[min(len(keys) - 1, i * len(keys) // width)]])
+            for i in range(width)
+        ]
+        height = max(2, (panel.content_size.height or 5) - 1)
+        chart = column_chart(values, height)
+        first, last = f"t{keys[0]}", f"t{keys[-1]}"
+        chart.append("\n")
+        chart.append(first, Style(color=MUTED))
+        chart.append(" " * max(1, width - len(first) - len(last)))
+        chart.append(last, Style(color=MUTED))
+        panel.update(chart)
 
     def on_key(self, event) -> None:  # type: ignore[no-untyped-def]
         if event.key in {"down", "j"}:
@@ -252,12 +366,14 @@ class ThreatDetectionScreen(Screen):
                 self._cursor = min(len(self._queue) - 1, self._cursor + 1)
                 self._render_queue()
                 self._render_signals()
+                self._update_mascot()
                 event.stop()
         elif event.key in {"up", "k"}:
             if self._queue:
                 self._cursor = max(0, self._cursor - 1)
                 self._render_queue()
                 self._render_signals()
+                self._update_mascot()
                 event.stop()
 
     def action_open_detail(self) -> None:
