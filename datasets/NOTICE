@@ -23,10 +23,15 @@ DATASET ATTRIBUTIONS AND PROVENANCE
    blockchain transaction graphs, transaction IDs (txids), addresses,
    fees, timestamps, and synthetic network observation layers.
 
+   The base tables are published on Kaggle by Rosalin Nayak as
+   "Bitcoin Transaction traffic":
+   https://www.kaggle.com/datasets/rosalinnayak/bitcoin-transaction-traffic
+
 2. Elliptic Data Set:
    This product includes data derived from the Elliptic Data Set
    (Elliptic, MIT-IBM Watson AI Lab), which provides labeled temporal
    graph transaction data for anti-money laundering (AML) detection.
+   - Source: https://www.kaggle.com/datasets/ellipticco/elliptic-data-set
    - Reference: Mark Weber et al., "Anti-Money Laundering in Bitcoin:
      Experimenting with Graph Convolutional Networks for Financial
      Forensics", KDD '19 Workshop on Anomaly Detection in Finance.
@@ -40,7 +45,17 @@ DATASET ATTRIBUTIONS AND PROVENANCE
    The raw DB-IP databases are downloaded separately and not redistributed
    within this repository.
 
-4. Synthetic & Challenge Metadata Layer:
+4. Bitcoin ETL:
+   Transaction fields and schema (txid, inputs, outputs, addresses,
+   values, fees, block timestamps) follow blockchain-etl/bitcoin-etl,
+   MIT License: https://github.com/blockchain-etl/bitcoin-etl
+
+5. Bitcoin transaction graph research dataset:
+   Hugo Schnoering and Michalis Vazirgiannis, "Bitcoin Research with a
+   Transaction Graph Dataset", arXiv:2411.10325, 2024, licensed under
+   CC BY-SA 4.0: https://arxiv.org/abs/2411.10325
+
+6. Synthetic & Challenge Metadata Layer:
    Generated via `ml/metadata_generator.py` and consolidated schemas,
    providing simulated P2P network traces, synthetic routing IPs,
    planted forensic patterns (CoinJoin, peeling chains, address reuse),

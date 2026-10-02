@@ -15,7 +15,7 @@ authors = [
     { name = "Jagadish Prasad Pattanaik" },
     { name = "Shreya Mishra" },
     { name = "Shreya Mohanty" },
-    { name = "Ashutosh Badapada" },
+    { name = "Ashutosh Badapanda" },
     { name = "Rosalin Nayak" },
 ]
 keywords = ["bitcoin", "aml", "fraud-detection", "graph", "tui", "textual"]
