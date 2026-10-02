@@ -557,29 +557,6 @@ ProgressBar Bar > .bar--complete {
     padding: 0 1;
 }
 
-/* --- Mini frogs on the loading screens (bitcraft/widgets/mini_frog.py) ----- */
-
-.mini-frog {
-    margin: 0 1;
-}
-
-#splash-frogs {
-    width: 100%;
-    height: 7;
-    align: center middle;
-    margin-top: 1;
-}
-
-#boot-log-row {
-    width: 100%;
-    height: auto;
-    align: center top;
-}
-
-#boot-log-row .mini-frog {
-    margin: 1 2;
-}
-
 /* --- Shared ----------------------------------------------------------- */
 
 .accent {

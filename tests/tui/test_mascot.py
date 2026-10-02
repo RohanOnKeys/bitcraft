@@ -55,7 +55,6 @@ def test_lift_raises_the_frog() -> None:
 async def test_frogs_only_on_loading_screens() -> None:
     """Data pages stay frog-free; the splash keeps its frog."""
     from bitcraft.screens.splash import SplashScreen
-    from bitcraft.widgets.mini_frog import MiniFrog
 
     app = BitCraftApp(
         store=Store(
@@ -67,7 +66,7 @@ async def test_frogs_only_on_loading_screens() -> None:
     )
     async with app.run_test(size=(180, 50)) as pilot:
         assert isinstance(app.screen, SplashScreen)
-        assert app.screen.query(Mascot) and app.screen.query(MiniFrog)
+        assert app.screen.query(Mascot)
         await pilot.press("enter")
         for _ in range(200):
             if isinstance(app.screen, DashboardScreen) and app.store.boot_complete:
@@ -77,4 +76,3 @@ async def test_frogs_only_on_loading_screens() -> None:
             await pilot.press(key)
             await pilot.pause(0.2)
             assert not app.screen.query(Mascot), key
-            assert not app.screen.query(MiniFrog), key
