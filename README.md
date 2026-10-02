@@ -98,6 +98,31 @@ bitcraft/
 
 ## Getting Started
 
+### Model and backend (live data)
+
+The dataset is the private Kaggle dataset
+`rosalinnayak/bitcoin-transaction-traffic`. Put its five CSVs in
+`datasets/` (git-ignored), then:
+
+```text
+pip install -r requirements.txt -r backend/requirements.txt
+python -m ml.pipeline                     # ~3 min first run, writes ml/artifacts/
+cd backend && python -m app.loader        # loads artifacts into backend/bitcraft.db
+cd backend && python -m uvicorn app.main:app --port 8000
+python -m tui.app --api                   # from the repo root, in another terminal
+```
+
+With no `DATABASE_URL` the API uses a local SQLite file, and Redis is
+optional. For the full PostgreSQL + Redis stack, use `docker compose up --build`:
+the `ml` service runs the pipeline, then `backend` loads the results and
+serves on port 8000.
+
+API: `/alerts`, `/alerts/{tx_id}`, `/graph/{tx_id}?depth=`, `/communities`,
+`/communities/{id}`, `/stats/summary`, `/threats/overview`,
+`/pipeline/status`, `/pipeline/metrics`. Interactive docs at
+`http://localhost:8000/docs`. Model details and held-out metrics are in
+`docs/model_card.md`.
+
 ### Terminal UI (demo mode)
 
 ```text
