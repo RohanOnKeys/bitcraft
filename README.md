@@ -131,11 +131,17 @@ The dataset is the private Kaggle dataset
 
 ```text
 pip install -r requirements.txt -r backend/requirements.txt
-python -m ml.pipeline                     # ~3 min first run, writes ml/artifacts/
+python -m ml.geoip download               # one-time: DB-IP Lite country + ASN databases
+python -m ml.metadata_generator           # challenge-format metadata (CSV, JSON, XML)
+python -m ml.pipeline                     # ~5 min first run, writes ml/artifacts/
 cd backend && python -m app.loader        # loads artifacts into backend/bitcraft.db
-cd backend && python -m uvicorn app.main:app --port 8000
-python -m tui.app --api                   # from the repo root, in another terminal
+bitcraft                                  # starts the API and opens the TUI
 ```
+
+The metadata layer carries the challenge's minimum fields (timestamp,
+src/dst IP and port, txid, input/output addresses and amounts, fee, script
+type). `python -m ml.ingest FILE` validates any CSV, JSON or XML file in
+that shape; GeoIP adds country and ASN offline.
 
 With no `DATABASE_URL` the API uses a local SQLite file, and Redis is
 optional. For the full PostgreSQL + Redis stack, use `docker compose up --build`:
@@ -143,10 +149,14 @@ the `ml` service runs the pipeline, then `backend` loads the results and
 serves on port 8000.
 
 API: `/alerts`, `/alerts/{tx_id}`, `/graph/{tx_id}?depth=`, `/communities`,
-`/communities/{id}`, `/stats/summary`, `/threats/overview`,
-`/pipeline/status`, `/pipeline/metrics`. Interactive docs at
-`http://localhost:8000/docs`. Model details and held-out metrics are in
-`docs/model_card.md`.
+`/communities/{id}`, `/entities`, `/entities/{id}`, `/entities/{id}/graph`,
+`/addresses/{address}`, `/ips/{ip}`, `/metadata/{tx_id}`, `/stats/summary`,
+`/threats/overview`, `/pipeline/status`, `/pipeline/metrics`. Interactive docs
+at `http://localhost:8000/docs`.
+
+Full instructions: [docs/user_manual.md](docs/user_manual.md). Approach,
+model choice and explainability: [docs/technical_writeup.md](docs/technical_writeup.md).
+Model details and held-out metrics: [docs/model_card.md](docs/model_card.md).
 
 ### Terminal UI (demo mode)
 
