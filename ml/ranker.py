@@ -30,7 +30,7 @@ INFRASTRUCTURE_FLAGS = (
 # Each known Tor-exit / hosting ASN hit adds this much (capped at 1.0).
 INFRASTRUCTURE_BONUS = 0.15
 
-# Display tiers, mirrored by tui/helpers/severity.py.
+# Display tiers, mirrored by bitcraft/helpers/severity.py.
 SEVERITY_THRESHOLDS = (("critical", 0.80), ("high", 0.60), ("medium", 0.40))
 
 

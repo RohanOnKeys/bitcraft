@@ -73,3 +73,16 @@ def test_unsupported_format(tmp_path: Path) -> None:
     (tmp_path / "m.parquet").write_bytes(b"x")
     with pytest.raises(ValueError):
         ingest(tmp_path / "m.parquet")
+
+
+@pytest.mark.parametrize("suffix", ["csv", "json", "xml"])
+def test_export_round_trip(tmp_path: Path, suffix: str) -> None:
+    from ml.ingest import export
+
+    write_csv(pd.DataFrame([GOOD, {**GOOD, "txid": "f" * 64}]), tmp_path / "in.csv")
+    frame, _ = ingest(tmp_path / "in.csv")
+    frame["src_country"] = "US"
+    out = export(frame, tmp_path / f"out.{suffix}")
+    again, report = ingest(out)
+    assert report.rows_kept == 2 and list(again["txid"]) == list(frame["txid"])
+    assert again["input_addresses"].iloc[0] == GOOD["input_addresses"]

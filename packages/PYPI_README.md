@@ -1,11 +1,15 @@
 # BitCraft
 
 Bitcoin transaction intelligence in your terminal: ranked alerts,
-provenance-tagged evidence, SHAP reasons and an animated link-analysis view.
+provenance-tagged evidence, SHAP reasons, wallet clustering and an animated
+link-analysis view.
+
+![BitCraft dashboard](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/dashboard.png)
 
 ## Install
 
 ```text
+pipx install bitcraft         # recommended: isolated install of the CLI
 pip install bitcraft          # any OS, Python 3.10+
 choco install bitcraft        # Windows, via Chocolatey
 ```
@@ -27,6 +31,10 @@ none is running. The API and ML pipeline live in the
 
 Best in Windows Terminal, a modern Linux terminal or iTerm2, at 160x46 or
 larger.
+
+| Wallets | Alert detail |
+| --- | --- |
+| ![Wallets](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/wallets.png) | ![Alert detail](https://raw.githubusercontent.com/RohanOnKeys/bitcraft/main/docs/images/detail.png) |
 
 ## License
 

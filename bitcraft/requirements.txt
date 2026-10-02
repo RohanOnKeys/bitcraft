@@ -1,0 +1,6 @@
+# TUI dependencies (bitcraft/).
+# textual>=5.0 required for App.MODES / switch_mode used by navigation.
+textual>=5.0
+httpx>=0.27
+# Pillow downsamples the frog mascot art (bitcraft/assets/mascots).
+pillow>=10.0

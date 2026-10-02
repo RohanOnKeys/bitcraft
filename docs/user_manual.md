@@ -260,7 +260,43 @@ reasons.
 
 ---
 
-## 7. Troubleshooting
+## 7. Exporting the enriched dataset
+
+To hand over the metadata with GeoIP country and ASN filled in:
+
+```text
+python -m ml.ingest datasets/metadata/bitcoin_metadata.csv --enrich --out enriched.xml
+```
+
+The output format follows the extension (`.csv`, `.json` or `.xml`).
+
+---
+
+## 8. Air-gapped (fully offline) deployment
+
+Everything runs offline. Only setup needs downloads, so build a bundle on a
+connected machine and carry it over:
+
+```text
+docker compose build                       # optional: include Docker images
+python packages/offline_bundle.py          # -> dist/offline/
+```
+
+The bundle holds Linux wheels for every dependency, the Docker images (if
+built), the datasets with the GeoIP databases, the repository and an
+`install.sh`. On the offline Linux machine:
+
+```text
+bash install.sh                            # no network needed
+cd bitcraft && docker compose up --no-build        # with Docker, or:
+source .venv/bin/activate && python -m ml.pipeline && (cd backend && python -m app.loader) && bitcraft
+```
+
+Use `--python 3.12` (or your version) if the target is not Python 3.11.
+
+---
+
+## 9. Troubleshooting
 
 | Symptom | Fix |
 | --- | --- |

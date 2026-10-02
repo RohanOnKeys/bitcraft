@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from tui import __version__, cli, launcher
+from bitcraft import __version__, cli, launcher
 
 
 class _Spawn:
@@ -79,23 +79,23 @@ def test_no_terminal_falls_back_to_current(monkeypatch) -> None:
 
 def test_session_command_forwards_options() -> None:
     cmd = launcher.session_command(launcher.Options(source="api", api_url="http://box:9000"))
-    assert cmd[:4] == [sys.executable, "-m", "tui.cli", "here"]
+    assert cmd[:4] == [sys.executable, "-m", "bitcraft.cli", "here"]
     assert cmd[4:] == ["--api", "--api-url", "http://box:9000"]
 
 
 def test_windows_terminal_gets_size_and_title(spawn, monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(launcher.shutil, "which", lambda name: "C:/wt.exe" if name.startswith("wt") else None)
-    where = launcher._open_windows(["py", "-m", "tui.cli", "here"], 190, 52, tmp_path)
+    where = launcher._open_windows(["py", "-m", "bitcraft.cli", "here"], 190, 52, tmp_path)
     cmd, _ = spawn.calls[0]
     assert where == "Windows Terminal"
     assert cmd[:5] == ["C:/wt.exe", "--size", "190,52", "--title", "BitCraft"]
-    assert cmd[-4:] == ["py", "-m", "tui.cli", "here"]
+    assert cmd[-4:] == ["py", "-m", "bitcraft.cli", "here"]
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="console flags are Windows-only")
 def test_falls_back_to_resized_console(spawn, monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(launcher.shutil, "which", lambda name: None)
-    where = launcher._open_windows(["py", "-m", "tui.cli"], 180, 50, tmp_path)
+    where = launcher._open_windows(["py", "-m", "bitcraft.cli"], 180, 50, tmp_path)
     cmd, kwargs = spawn.calls[0]
     assert where == "Command Prompt"
     assert "mode con: cols=180 lines=50" in cmd[-1]

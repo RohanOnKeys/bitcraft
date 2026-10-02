@@ -1,0 +1,610 @@
+/* BitCraft TUI theme: pitch black, Dark Knight vibes.
+ *
+ * Near-black background, high-contrast light text, one muted gold accent
+ * for headers and primary signal, deep red reserved for high-severity
+ * alerts only. See docs/tui_design.md for the full rationale.
+ */
+
+Screen {
+    background: #000000;
+    color: #e6e6e6;
+}
+
+Header {
+    background: #000000;
+    color: #d4af37;
+    text-style: bold;
+}
+
+Footer {
+    background: #000000;
+    color: #7a7a7a;
+}
+
+/* Gold scrollbars everywhere (the theme sets the same, this pins it). */
+* {
+    scrollbar-color: #d4af37 60%;
+    scrollbar-color-hover: #e8c55a;
+    scrollbar-color-active: #ffd84d;
+    scrollbar-background: #0d0b08;
+    scrollbar-background-hover: #0d0b08;
+    scrollbar-background-active: #0d0b08;
+    scrollbar-corner-color: #0d0b08;
+    scrollbar-size-vertical: 1;
+}
+
+/* Tables: gold cursor row, gold header, faint warm zebra. */
+DataTable {
+    background: #050505;
+}
+DataTable > .datatable--header {
+    background: #0d0b08;
+    color: #d4af37;
+    text-style: bold;
+}
+DataTable > .datatable--cursor {
+    background: #d4af37;
+    color: #000000;
+    text-style: bold;
+}
+DataTable:blur > .datatable--cursor {
+    background: #d4af37 55%;
+    color: #000000;
+}
+DataTable > .datatable--hover {
+    background: #d4af37 12%;
+}
+DataTable > .datatable--odd-row {
+    background: #0b0906;
+}
+DataTable > .datatable--even-row {
+    background: #050505;
+}
+
+Checkbox > .toggle--button {
+    color: #0d0b08;
+    background: #2a2418;
+}
+Checkbox.-on > .toggle--button {
+    color: #000000;
+    background: #d4af37;
+}
+Checkbox:focus > .toggle--label {
+    background: #d4af37 20%;
+}
+
+ProgressBar Bar > .bar--bar,
+ProgressBar Bar > .bar--complete {
+    color: #ffd84d;
+    background: #1c1814;
+}
+
+/* Titled chart/info panels. */
+.panel {
+    background: #050505;
+    border: round #2a2418;
+    border-title-color: #ffd84d;
+    border-title-style: bold;
+    border-subtitle-color: #8a8078;
+}
+.panel:focus-within {
+    border: round #d4af37;
+}
+
+/* --- Splash ----------------------------------------------------------- */
+
+#splash {
+    width: 100%;
+    height: 100%;
+    align: center middle;
+}
+
+#splash-spacer-top,
+#splash-spacer-bottom {
+    height: 1fr;
+}
+
+#splash-mascot {
+    width: 100%;
+    content-align: center top;
+    margin-bottom: 1;
+}
+
+#splash-logo {
+    width: 100%;
+    height: auto;
+    content-align: center middle;
+    color: #d4af37;
+    text-style: bold;
+}
+
+#splash-hint {
+    width: 100%;
+    height: auto;
+    content-align: center middle;
+    color: #7a7a7a;
+    margin-top: 2;
+}
+
+/* --- Boot ------------------------------------------------------------- */
+
+#boot {
+    width: 100%;
+    height: 100%;
+    align: center middle;
+    padding: 1 2;
+}
+
+#boot-brand {
+    width: 100%;
+    height: auto;
+    align: center top;
+}
+
+#boot-logo {
+    width: auto;
+    height: auto;
+    margin: 1 0 0 2;
+    color: #d4af37;
+    text-style: bold;
+}
+
+#boot-shimmer {
+    width: 100%;
+    height: 1;
+    content-align: center middle;
+    color: #d4af37;
+    margin: 1 0;
+}
+
+#boot-progress {
+    width: 60%;
+    margin: 1 0;
+}
+
+#boot-log {
+    width: 80%;
+    height: 1fr;
+    max-height: 14;
+    min-height: 5;
+    background: #050505;
+    border: round #1a1a1a;
+    color: #e6e6e6;
+}
+
+#boot-hint {
+    width: 100%;
+    height: auto;
+    content-align: center middle;
+    color: #7a7a7a;
+    margin-top: 1;
+}
+
+/* --- Dashboard -------------------------------------------------------- */
+
+#dashboard {
+    width: 100%;
+    height: 1fr;
+    padding: 0 1;
+}
+
+#size-guard {
+    width: 100%;
+    height: 1fr;
+    content-align: center middle;
+    color: #d4af37;
+    text-style: bold;
+}
+
+#kpi-summary {
+    height: 5;
+    background: #050505;
+    border: round #2a2418;
+    margin-bottom: 0;
+}
+
+#kpi-row {
+    width: 100%;
+    height: 100%;
+    align: center middle;
+}
+
+.kpi-cell {
+    width: 1fr;
+    height: auto;
+    content-align: center middle;
+    color: #e6e6e6;
+}
+
+#dashboard-body {
+    height: 1fr;
+}
+
+#left-col {
+    width: 28;
+    height: 100%;
+    margin-right: 1;
+}
+
+#filter-panel {
+    width: 100%;
+    height: auto;
+    background: #050505;
+    border: round #2a2418;
+    padding: 0 1;
+}
+
+#score-histogram {
+    width: 100%;
+    height: 1fr;
+    min-height: 6;
+    padding: 0 1;
+    color: #7a7a7a;
+}
+
+#center-col {
+    width: 1fr;
+    height: 100%;
+}
+
+#alert-list {
+    width: 100%;
+    height: 1fr;
+    background: #050505;
+    border: round #2a2418;
+}
+
+#alert-list:focus {
+    border: round #d4af37;
+}
+
+#alert-status {
+    height: 1;
+    color: #7a7a7a;
+    padding: 0 1;
+}
+
+#alert-empty {
+    height: auto;
+}
+
+#preview-col {
+    width: 36;
+    height: 100%;
+    margin-left: 1;
+}
+
+#preview-pane {
+    width: 100%;
+    height: auto;
+    padding: 0 1;
+    color: #e6e6e6;
+}
+
+#preview-graph {
+    width: 100%;
+    height: 1fr;
+    min-height: 8;
+}
+
+.filter-label {
+    color: #8a8078;
+    margin-top: 1;
+}
+
+#filter-panel Input {
+    width: 100%;
+    height: 1;
+    background: #0d0b08;
+    border: none;
+    padding: 0 1;
+}
+
+#filter-panel Input:focus {
+    background: #2a2210;
+}
+
+#filter-panel Checkbox {
+    height: 1;
+    border: none;
+    padding: 0;
+    margin-top: 1;
+    background: #050505;
+}
+
+/* --- Alert detail / graph / threats ---------------------------------- */
+
+#alert-detail {
+    width: 100%;
+    height: 1fr;
+    padding: 0 1;
+}
+
+#detail-main {
+    width: 1fr;
+    height: 100%;
+}
+
+#detail-body {
+    width: 100%;
+    height: 1fr;
+    padding: 0 2;
+    overflow-y: auto;
+}
+
+#detail-side {
+    width: 58;
+    height: 100%;
+    margin-left: 1;
+}
+
+#detail-graph {
+    width: 100%;
+    height: 1fr;
+    min-height: 10;
+}
+
+#graph-page {
+    width: 100%;
+    height: 1fr;
+    padding: 0 1;
+}
+
+#graph-top {
+    height: 1fr;
+    min-height: 14;
+}
+
+#graph-main {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+}
+
+#graph-view {
+    width: 100%;
+    height: 1fr;
+}
+
+#graph-legend {
+    height: 1;
+    width: 100%;
+}
+
+#graph-side {
+    width: 58;
+    height: 100%;
+    margin-left: 1;
+}
+
+#graph-stats {
+    height: 7;
+    padding: 0 1;
+}
+
+#graph-side #graph-drivers {
+    width: 100%;
+    height: 1fr;
+    margin: 1 0 0 0;
+}
+
+#graph-bottom {
+    height: 12;
+}
+
+#graph-bottom-2 {
+    height: 10;
+}
+
+#graph-timeline {
+    width: 2fr;
+    height: 100%;
+    padding: 0 1;
+}
+
+#graph-severity,
+#graph-drivers {
+    width: 40;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
+#graph-communities {
+    width: 1fr;
+    min-width: 34;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
+#graph-flow {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+}
+
+#graph-heatmap {
+    width: 56;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
+#graph-degree {
+    width: 38;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
+#threats {
+    width: 100%;
+    height: 1fr;
+    padding: 0 1;
+}
+
+#threat-posture {
+    height: 1;
+    padding: 0 1;
+    margin-top: 1;
+}
+
+#threat-stack {
+    height: 1;
+    margin: 1 1 0 1;
+}
+
+#threat-body {
+    height: 1fr;
+}
+
+#threat-queue {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+}
+
+#threat-side {
+    width: 34;
+    height: 100%;
+    margin-left: 1;
+}
+
+#threat-drivers {
+    width: 100%;
+    height: 1fr;
+    padding: 0 1;
+}
+
+#threat-communities {
+    width: 40;
+    height: 100%;
+    margin-left: 1;
+}
+
+#threat-bottom {
+    height: 8;
+}
+
+#threat-signals {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+}
+
+#threat-coverage {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
+#threat-timeline {
+    width: 1fr;
+    height: 100%;
+    padding: 0 1;
+    margin-left: 1;
+}
+
+/* --- Wallets ----------------------------------------------------------- */
+
+#wallets {
+    width: 100%;
+    height: 1fr;
+    padding: 0 1;
+}
+
+#wallet-posture {
+    height: 1;
+    margin: 1 0;
+}
+
+#wallet-body {
+    height: 1fr;
+}
+
+#wallet-table {
+    width: 1fr;
+    height: 100%;
+}
+
+#wallet-table:focus {
+    border: round #d4af37;
+}
+
+#wallet-side {
+    width: 60;
+    height: 100%;
+    margin-left: 1;
+}
+
+#wallet-detail {
+    width: 100%;
+    height: auto;
+    max-height: 18;
+    padding: 0 1;
+}
+
+#wallet-graph {
+    width: 100%;
+    height: 1fr;
+    min-height: 8;
+}
+
+#wallet-txs {
+    height: 9;
+    padding: 0 1;
+}
+
+/* --- Mini frogs on the loading screens (bitcraft/widgets/mini_frog.py) ----- */
+
+.mini-frog {
+    margin: 0 1;
+}
+
+#splash-frogs {
+    width: 100%;
+    height: 7;
+    align: center middle;
+    margin-top: 1;
+}
+
+#boot-log-row {
+    width: 100%;
+    height: auto;
+    align: center top;
+}
+
+#boot-log-row .mini-frog {
+    margin: 1 2;
+}
+
+/* --- Shared ----------------------------------------------------------- */
+
+.accent {
+    color: #d4af37;
+    text-style: bold;
+}
+
+.alert-high {
+    color: #b3261e;
+    text-style: bold;
+}
+
+.alert-medium {
+    color: #d4af37;
+}
+
+.alert-low {
+    color: #7a7a7a;
+}
+
+.modeled-badge {
+    color: #6a6a6a;
+    text-style: italic;
+}
+
+#filter-body {
+    height: auto;
+}

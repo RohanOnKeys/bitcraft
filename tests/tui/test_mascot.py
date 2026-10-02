@@ -2,11 +2,11 @@
 
 import pytest
 
-from tui.app import BitCraftApp
-from tui.providers.demo_provider import DemoProvider
-from tui.screens.dashboard import DashboardScreen
-from tui.store import Store
-from tui.widgets.mascot import (
+from bitcraft.app import BitCraftApp
+from bitcraft.providers.demo_provider import DemoProvider
+from bitcraft.screens.dashboard import DashboardScreen
+from bitcraft.store import Store
+from bitcraft.widgets.mascot import (
     ASSET_DIR,
     HOP_HEADROOM,
     IDLE_MOODS,
@@ -54,8 +54,8 @@ def test_lift_raises_the_frog() -> None:
 @pytest.mark.asyncio
 async def test_frogs_only_on_loading_screens() -> None:
     """Data pages stay frog-free; the splash keeps its frog."""
-    from tui.screens.splash import SplashScreen
-    from tui.widgets.mini_frog import MiniFrog
+    from bitcraft.screens.splash import SplashScreen
+    from bitcraft.widgets.mini_frog import MiniFrog
 
     app = BitCraftApp(
         store=Store(

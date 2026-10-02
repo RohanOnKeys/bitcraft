@@ -8,6 +8,12 @@ The project is designed for Linux and operates entirely offline on synthetic dat
 
 ---
 
+![BitCraft dashboard](docs/images/dashboard.png)
+
+| Wallets | Graph explorer |
+| --- | --- |
+| ![Wallets](docs/images/wallets.png) | ![Graph explorer](docs/images/graph.png) |
+
 ## Background
 
 Bitcoin's pseudonymous peer to peer architecture enables legitimate financial activity, but it also allows ransomware payments, darknet market proceeds, extortion, and money laundering to move across the network with limited traditional financial oversight.
@@ -107,7 +113,7 @@ bitcraft                      # opens BitCraft in a new, large terminal window
 ```
 
 From a clone, `pip install -e .` gives you the same `bitcraft` command, or
-run `bitcraft.bat` / `./bitcraft` / `./bitcraft.ps1` straight from the repo
+run `bitcraft.bat` / `./bitcraft.sh` / `./bitcraft.ps1` straight from the repo
 root without installing anything.
 
 | Command | What it does |
@@ -161,15 +167,15 @@ Model details and held-out metrics: [docs/model_card.md](docs/model_card.md).
 ### Terminal UI (demo mode)
 
 ```text
-pip install -r tui/requirements.txt
-python -m tui.app --demo
+pip install -r bitcraft/requirements.txt
+python -m bitcraft.app --demo
 ```
 
 Other data sources:
 
 ```text
-python -m tui.app --api
-python -m tui.app
+python -m bitcraft.app --api
+python -m bitcraft.app
 ```
 
 `--demo` forces synthetic data. `--api` talks to FastAPI at

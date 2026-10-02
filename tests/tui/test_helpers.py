@@ -1,7 +1,7 @@
 """Unit tests for helpers used by the TUI."""
 
-from tui.helpers.drivers import primary_driver, weighted_parts
-from tui.helpers.format import format_int, network_cell, score_bar
+from bitcraft.helpers.drivers import primary_driver, weighted_parts
+from bitcraft.helpers.format import format_int, network_cell, score_bar
 
 
 def test_score_bar_bounds() -> None:

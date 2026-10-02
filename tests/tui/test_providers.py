@@ -5,12 +5,12 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from tui.app import BitCraftApp
-from tui.api_client import ApiClient
-from tui.helpers.drivers import primary_driver
-from tui.helpers.severity import severity_for_score
-from tui.providers.api_provider import ApiProvider
-from tui.providers.demo_provider import (
+from bitcraft.app import BitCraftApp
+from bitcraft.api_client import ApiClient
+from bitcraft.helpers.drivers import primary_driver
+from bitcraft.helpers.severity import severity_for_score
+from bitcraft.providers.api_provider import ApiProvider
+from bitcraft.providers.demo_provider import (
     ALERT_COUNT,
     ANOMALY_WEIGHT,
     COMMUNITY_WEIGHT,
@@ -22,15 +22,15 @@ from tui.providers.demo_provider import (
     TOTAL_TRANSACTIONS,
     DemoProvider,
 )
-from tui.providers.factory import create_provider, resolve_source
-from tui.providers.models import AlertQuery, ProviderError
-from tui.screens.alert_detail import AlertDetailScreen
-from tui.screens.boot import BootScreen
-from tui.screens.dashboard import DashboardScreen
-from tui.screens.graph_explorer import GraphExplorerScreen
-from tui.screens.splash import SplashScreen
-from tui.screens.threat_detection import CAVEAT, ThreatDetectionScreen
-from tui.store import Store
+from bitcraft.providers.factory import create_provider, resolve_source
+from bitcraft.providers.models import AlertQuery, ProviderError
+from bitcraft.screens.alert_detail import AlertDetailScreen
+from bitcraft.screens.boot import BootScreen
+from bitcraft.screens.dashboard import DashboardScreen
+from bitcraft.screens.graph_explorer import GraphExplorerScreen
+from bitcraft.screens.splash import SplashScreen
+from bitcraft.screens.threat_detection import CAVEAT, ThreatDetectionScreen
+from bitcraft.store import Store
 from textual.widgets import Static
 
 
@@ -213,7 +213,7 @@ def test_resolve_source_flags() -> None:
 
 def test_network_filter_and_n_a_cells() -> None:
     """Missing network coverage is n/a semantics at the data layer."""
-    from tui.helpers.format import network_cell
+    from bitcraft.helpers.format import network_cell
 
     provider = DemoProvider(seed=42, simulate_latency=False)
     page = provider.alerts(AlertQuery(limit=ALERT_COUNT))

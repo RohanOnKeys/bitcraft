@@ -27,6 +27,11 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Security",
 ]
 dependencies = [
@@ -39,17 +44,19 @@ dependencies = [
 dev = ["pytest>=8.3", "pytest-asyncio>=0.23"]
 
 [project.scripts]
-bitcraft = "tui.cli:main"
+bitcraft = "bitcraft.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/RohanOnKeys/bitcraft"
 Source = "https://github.com/RohanOnKeys/bitcraft"
+Documentation = "https://github.com/RohanOnKeys/bitcraft/blob/main/docs/user_manual.md"
+Issues = "https://github.com/RohanOnKeys/bitcraft/issues"
 
 [tool.setuptools.dynamic]
-version = { attr = "tui.__version__" }
+version = { attr = "bitcraft.__version__" }
 
 [tool.setuptools.packages.find]
-include = ["tui*"]
+include = ["bitcraft*"]
 
 [tool.setuptools.package-data]
-tui = ["theme.tcss", "assets/mascots/*.png"]
+bitcraft = ["theme.tcss", "assets/mascots/*.png"]

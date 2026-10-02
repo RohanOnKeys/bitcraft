@@ -223,14 +223,45 @@ def ingest(paths) -> tuple[pd.DataFrame, IngestReport]:
     return combined, report
 
 
+def export(frame: pd.DataFrame, path: Path) -> Path:
+    """Write an ingested (optionally GeoIP-enriched) table as CSV, JSON or XML.
+
+    The format follows the file extension; timestamps become ISO-8601 UTC.
+    """
+    from ml.metadata_generator import write_csv, write_json, write_xml
+
+    out = frame.drop(columns=["source_file"], errors="ignore").copy()
+    out["timestamp"] = out["timestamp"].dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    for column in out.columns:
+        if str(out[column].dtype) == "Int64":
+            out[column] = out[column].astype(object).where(out[column].notna(), None)
+    writers = {".csv": write_csv, ".json": write_json, ".xml": write_xml}
+    writer = writers.get(path.suffix.lower())
+    if writer is None:
+        raise ValueError(f"cannot export to {path.suffix!r} (use .csv, .json or .xml)")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    writer(out, path)
+    return path
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Ingest and validate Bitcoin metadata (CSV/JSON/XML)")
     parser.add_argument("paths", nargs="+", type=Path)
+    parser.add_argument("--enrich", action="store_true", help="add geo_country/ASN from the GeoIP databases")
+    parser.add_argument("--geoip", type=Path, default=Path("datasets/geoip"), help="GeoIP database directory")
+    parser.add_argument("--out", type=Path, help="write the validated table to .csv, .json or .xml")
     args = parser.parse_args(argv)
     frame, report = ingest(args.paths)
     print(json.dumps(report.summary(), indent=2))
     if len(frame):
         print(f"time span {frame['timestamp'].min()} .. {frame['timestamp'].max()}")
+    if args.enrich:
+        from ml.geoip import GeoIP
+
+        frame = GeoIP(args.geoip).enrich(frame)
+        print(f"GeoIP: src country resolved for {frame['src_country'].notna().mean():.1%} of rows")
+    if args.out:
+        print(f"wrote {export(frame, args.out)}")
 
 
 if __name__ == "__main__":
