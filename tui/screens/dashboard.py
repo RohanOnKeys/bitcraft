@@ -2,25 +2,37 @@
 
 from __future__ import annotations
 
+from rich.style import Style
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Static
 
-from tui.helpers.format import network_cell, score_bar
+from tui.helpers.format import network_cell
 from tui.helpers.severity import severity_for_score
 from tui.providers.demo_provider import (
     ANOMALY_WEIGHT,
     COMMUNITY_WEIGHT,
+    MODEL_WEIGHT,
     NETWORK_WEIGHT,
 )
 from tui.providers.models import ProviderError
 from tui.screens.alert_detail import AlertDetailScreen
 from tui.widgets.alert_list import AlertList
+from tui.widgets.chart_panels import DRIVER_COLOURS, driver_bars, score_gauge, severity_colour
+from tui.widgets.charts import MUTED, TEXT, YELLOW, column_chart
 from tui.widgets.filter_panel import FilterPanel
 from tui.widgets.header_bar import HeaderBar
 from tui.widgets.kpi_summary import KpiSummary
+from tui.widgets.graph_view import GraphView
+from tui.widgets.mascot import NATIVE_WIDTH, Mascot
 from tui.widgets.panel_state import PanelState
+
+
+# Room needed before the preview column widens to hold the full-size frog.
+MASCOT_MIN_WIDTH = 160
+MASCOT_MIN_HEIGHT = 46
 
 
 class DashboardScreen(Screen):
@@ -47,7 +59,7 @@ class DashboardScreen(Screen):
             with Horizontal(id="dashboard-body"):
                 with Vertical(id="left-col"):
                     yield FilterPanel(id="filter-panel")
-                    yield Static("", id="score-histogram")
+                    yield Static("", id="score-histogram", classes="panel")
                 with Vertical(id="center-col"):
                     yield AlertList(id="alert-list")
                     yield Static("", id="alert-status")
@@ -56,7 +68,12 @@ class DashboardScreen(Screen):
                         message="",
                         id="alert-empty",
                     )
-                yield Static("", id="preview-pane")
+                with Vertical(id="preview-col"):
+                    yield Static("", id="preview-pane", classes="panel")
+                    yield GraphView(clusters=3, labels=False, id="preview-graph", classes="panel")
+                    yield Mascot(
+                        "happy", art_width=NATIVE_WIDTH, idle=True, id="dashboard-mascot"
+                    )
         yield Footer()
 
     def on_mount(self) -> None:
@@ -86,7 +103,10 @@ class DashboardScreen(Screen):
         self.query_one("#kpi-summary").display = not small
         self.query_one("#dashboard-body").display = not small
         wide = self.size.width >= 120
-        self.query_one("#preview-pane").display = wide and not small
+        roomy = self.size.width >= MASCOT_MIN_WIDTH and self.size.height >= MASCOT_MIN_HEIGHT
+        self.query_one("#preview-col").display = wide and not small
+        self.query_one("#preview-col").styles.width = NATIVE_WIDTH + 2 if roomy else 36
+        self.query_one("#dashboard-mascot").display = roomy
 
     def _refresh_all(self) -> None:
         self.query_one("#kpi-summary", KpiSummary).refresh_from_store()
@@ -120,46 +140,73 @@ class DashboardScreen(Screen):
     def _update_histogram(self) -> None:
         page = self.app.store.alert_page
         hist = self.query_one("#score-histogram", Static)
+        hist.border_title = "score histogram"
         if page is None or not page.items:
-            hist.update("score hist\n(no data)")
+            hist.update("(no data)")
             return
-        buckets = [0] * 10
+        buckets = [0] * 12
         for row in page.items:
-            idx = min(9, int(row.composite_score * 10))
-            buckets[idx] += 1
-        peak = max(buckets) or 1
-        lines = ["score hist"]
-        for i, count in enumerate(buckets):
-            bar_w = int(round(count / peak * 12))
-            lines.append(f"{i/10:.1f} {'#' * bar_w}")
-        hist.update("\n".join(lines))
+            buckets[min(11, int(row.composite_score * 12))] += 1
+        height = max(3, hist.content_size.height - 2 or 8)
+        chart = column_chart([float(b) for b in buckets], height, gap=True)
+        chart.append("\n")
+        chart.append("0.0" + " " * 17 + "1.0", Style(color=MUTED))
+        chart.append("\n")
+        chart.append(f"peak {max(buckets)} alerts", Style(color=YELLOW, bold=True))
+        hist.update(chart)
 
     def _update_preview(self) -> None:
         preview = self.query_one("#preview-pane", Static)
+        preview.border_title = "preview"
         store = self.app.store
         row = store.selected_alert()
         if row is None and store.alert_page and store.alert_page.items:
             row = store.alert_page.items[0]
             store.select_tx(row.elliptic_tx_id)
+        mascot = self.query_one("#dashboard-mascot", Mascot)
+        graph = self.query_one("#preview-graph", GraphView)
         if row is None:
-            preview.update("preview\n(no selection)")
+            preview.update("(no selection)")
             return
         tier = row.severity or severity_for_score(row.composite_score)
+        mascot.hop()
+        graph.set_focus_tx(row.elliptic_tx_id)
+        graph.border_title = f"neighbourhood · tx {row.elliptic_tx_id}"
+        wm = MODEL_WEIGHT * (row.model_score or 0.0)
         wa = ANOMALY_WEIGHT * row.anomaly_score
         wc = COMMUNITY_WEIGHT * row.community_risk
         wn = NETWORK_WEIGHT * row.network_signal
         net = network_cell(row.has_network_layer, row.network_signal)
-        preview.update(
-            "preview\n"
-            f"tx {row.elliptic_tx_id}\n"
-            f"sev {tier}\n"
-            f"score {row.composite_score:.3f} {score_bar(row.composite_score)}\n"
-            f"anomaly x0.60  {wa:.3f} {score_bar(wa)}\n"
-            f"community x0.25  {wc:.3f} {score_bar(wc)}\n"
-            f"network x0.15  {wn:.3f} {score_bar(wn)}\n"
-            f"synthetic {'yes' if row.has_synthetic_layer else 'no'}\n"
-            f"network {net}\n"
+        bar_w = max(8, preview.content_size.width - 22)
+        text = Text(no_wrap=True, end="")
+        text.append("tx ", Style(color=MUTED))
+        text.append(f"{row.elliptic_tx_id}", Style(color=YELLOW, bold=True))
+        text.append("  ")
+        text.append(f" {tier.upper()} ", Style(color="#000000", bgcolor=severity_colour(tier), bold=True))
+        text.append(f"  rank {row.rank}\n\n", Style(color=MUTED))
+        text.append("score     ", Style(color=MUTED))
+        text.append_text(score_gauge(row.composite_score, bar_w + 1))
+        text.append("\n\n")
+        text.append_text(driver_bars(
+            [
+                ("risk model", wm, DRIVER_COLOURS["MODEL"]),
+                ("anomaly", wa, DRIVER_COLOURS["ANOMALY"]),
+                ("community", wc, DRIVER_COLOURS["COMMUNITY"]),
+                ("network", wn, DRIVER_COLOURS["NETWORK"]),
+            ],
+            bar_w,
+        ))
+        text.append("\n\n")
+        text.append("weights   ", Style(color=MUTED))
+        text.append(
+            f"x{MODEL_WEIGHT:.2f} · x{ANOMALY_WEIGHT:.2f} · x{COMMUNITY_WEIGHT:.2f} · x{NETWORK_WEIGHT:.2f}\n",
+            Style(color=TEXT),
         )
+        text.append("synthetic ", Style(color=MUTED))
+        text.append(("yes" if row.has_synthetic_layer else "no") + "\n", Style(color=YELLOW))
+        text.append("network   ", Style(color=MUTED))
+        text.append(net, Style(color=YELLOW if row.has_network_layer else MUTED, italic=True))
+        preview.update(text)
 
     def _reload_alerts(self) -> None:
         store = self.app.store
@@ -207,6 +254,9 @@ class DashboardScreen(Screen):
             self._apply_filters()
 
     def _apply_filters(self) -> None:
+        # Debounced from on_input_changed; the screen may be gone by now.
+        if not self.is_attached:
+            return
         self.query_one("#filter-panel", FilterPanel).read_into_store()
         self._reload_alerts()
 
