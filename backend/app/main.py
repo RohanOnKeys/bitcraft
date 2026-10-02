@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app import models as _models  # noqa: F401  (registers models on Base.metadata)
-from app.api import alerts, communities, graph, pipeline, stats
+from app.api import alerts, communities, entities, graph, pipeline, stats
 from app.core.database import Base, engine
 
 
@@ -28,6 +28,7 @@ app.include_router(graph.router)
 app.include_router(communities.router)
 app.include_router(stats.router)
 app.include_router(pipeline.router)
+app.include_router(entities.router)
 
 
 @app.get("/health")
