@@ -20,6 +20,7 @@ from tui.providers.models import (
     AlertSummary,
     CommunityDetail,
     CommunitySummary,
+    EvidenceItem,
     GraphEdge,
     GraphNode,
     Health,
@@ -59,10 +60,30 @@ def _parse_shap(raw: Any) -> Optional[list[ShapReason]]:
                     ShapReason(
                         feature_index=int(item.get("feature_index", item.get("index", 0))),
                         contribution=float(item.get("contribution", item.get("value", 0.0))),
+                        feature=item.get("feature"),
                     )
                 )
         return out
     return None
+
+
+def _parse_evidence(raw: Any) -> Optional[list[EvidenceItem]]:
+    """Structured evidence rows; unknown provenance fails safe to modeled."""
+    if not isinstance(raw, list):
+        return None
+    items: list[EvidenceItem] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        provenance = "real" if item.get("provenance") == "real" else "modeled"
+        items.append(
+            EvidenceItem(
+                label=str(item.get("label", "")),
+                value=str(item.get("value", "")),
+                provenance=provenance,
+            )
+        )
+    return items
 
 
 class ApiProvider:
@@ -139,6 +160,7 @@ class ApiProvider:
             timestep=item.get("timestep"),
             community_id=item.get("community_id"),
             severity=severity,
+            model_score=item.get("model_score"),
         )
 
     def alerts(self, query: AlertQuery) -> AlertPage:
@@ -191,7 +213,8 @@ class ApiProvider:
             timestep=summary.timestep,
             community_id=summary.community_id,
             severity=summary.severity,
-            evidence_items=None,  # extension; backend does not send yet
+            evidence_items=_parse_evidence(data.get("evidence_items")),
+            model_score=summary.model_score,
         )
 
     def subgraph(self, tx_id: int, depth: int = 1) -> Subgraph:
@@ -234,13 +257,40 @@ class ApiProvider:
         )
 
     def top_communities(self, limit: int = 25) -> list[CommunitySummary]:
-        """No list endpoint yet; return empty and let UI show empty state."""
-        # extension, see future.md: no GET /communities list endpoint
-        return []
+        """GET /communities; an older backend without it gives an empty list."""
+        try:
+            data = self._call(self._client.get_communities, limit)
+        except ProviderError:
+            return []
+        return [
+            CommunitySummary(
+                community_id=int(c["community_id"]),
+                size=int(c["size"]),
+                illicit_ratio=c.get("illicit_ratio"),
+                mean_pagerank=float(c.get("mean_pagerank") or 0.0),
+                alert_count=int(c.get("alert_count", 0)),
+            )
+            for c in data
+        ]
 
     def threat_overview(self) -> ThreatOverview:
-        """Approximate from alerts page when no dedicated endpoint exists."""
-        # extension, see future.md
+        """GET /threats/overview, else approximate from the alerts page."""
+        try:
+            data = self._call(self._client.get_threat_overview)
+            return ThreatOverview(
+                critical_count=int(data["critical_count"]),
+                high_count=int(data["high_count"]),
+                medium_count=int(data["medium_count"]),
+                low_count=int(data["low_count"]),
+                no_network_evidence_count=int(data["no_network_evidence_count"]),
+                high_illicit_community_count=int(data["high_illicit_community_count"]),
+                alerts_per_timestep={
+                    int(k): int(v) for k, v in (data.get("alerts_per_timestep") or {}).items()
+                }
+                or None,
+            )
+        except ProviderError:
+            pass
         page = self.alerts(AlertQuery(offset=0, limit=500))
         crit = high = med = low = no_net = 0
         for row in page.items:
