@@ -37,3 +37,14 @@ datasets/*.csv
 datasets/*.zip
 ml/artifacts/
 backend/*.db
+
+# Launcher API log
+backend/api.log
+
+# Python / Chocolatey build outputs
+dist/
+build/
+*.egg-info/
+*.nupkg
+packaging/chocolatey/tools/*.whl
+packaging/chocolatey/tools/LICENSE.txt
