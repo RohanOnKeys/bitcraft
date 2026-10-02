@@ -32,10 +32,10 @@ Thumbs.db
 # Logs
 *.log
 
-# Dataset (Kaggle: rosalinnayak/bitcoin-transaction-traffic) and pipeline outputs
-# Everything under datasets/ (CSVs, generated metadata, GeoIP databases) stays local.
 datasets/*
 !datasets/.gitkeep
+!datasets/LICENSE
+!datasets/NOTICE
 ml/artifacts/
 backend/*.db
 
