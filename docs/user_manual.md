@@ -51,10 +51,36 @@ on the dashboard. Press **q** to quit.
 
 All data lives in `datasets/`, which is never committed to git.
 
+### 3.0 One command for everything
+
+Every dataset BitCraft uses is attached to the GitHub release as a zip
+archive. One command downloads them, checks each against the SHA-256
+pinned in `ml/references/dataset_manifest.json`, and unpacks them into
+`datasets/`. No Kaggle account is needed:
+
+```text
+python -m ml.dataset download          # base (148 MB), metadata (78 MB), geoip (10 MB)
+python -m ml.dataset download geoip    # or only some archives
+python -m ml.dataset status            # what is present
+```
+
+After that, sections 3.1 to 3.3 are already done; skip to section 4.
+Downloaded files are not fetched again unless you pass `--force`.
+
+To run without any download, generate a fully synthetic dataset in the
+same format (the scores then show that the system runs, not how it
+performs on real data):
+
+```text
+python -m ml.synthetic --tx 20000      # -> datasets/synthetic/
+python -m ml.pipeline --datasets datasets/synthetic --no-strict
+```
+
 ### 3.1 The base dataset
 
-Download the Kaggle dataset `rosalinnayak/bitcoin-transaction-traffic`
-and put its five CSV files directly in `datasets/`:
+`python -m ml.dataset download base` fetches it. It is also on Kaggle as
+`rosalinnayak/bitcoin-transaction-traffic`; the five CSV files go
+directly in `datasets/`:
 
 ```text
 datasets/elliptic_features.csv
