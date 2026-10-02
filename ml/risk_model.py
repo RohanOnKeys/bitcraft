@@ -45,14 +45,16 @@ def train_and_score(
     class_label: pd.Series,
     timestep: pd.Series,
     config: dict,
+    section: str = "risk_model",
 ) -> tuple[HistGradientBoostingClassifier, pd.Series]:
     """Fit on the training window and return (model, risk_score per row).
 
     feature_matrix, class_label and timestep share the elliptic_tx_id index.
     risk_score is the illicit probability, out-of-fold inside the window.
+    section picks the config block (the metadata model reuses this routine).
     """
-    cfg = config.get("risk_model", {})
-    max_ts = int(cfg.get("train_max_timestep", 34))
+    cfg = config.get(section, {})
+    max_ts = int(cfg.get("train_max_timestep", config.get("label_window", {}).get("train_max_timestep", 34)))
     folds = int(cfg.get("cv_folds", 5))
     X = model_features(feature_matrix)
     labels = class_label.reindex(X.index)
