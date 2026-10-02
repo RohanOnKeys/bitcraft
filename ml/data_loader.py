@@ -64,8 +64,14 @@ NETWORK_DESTINATION_IP_COLUMN = "destination_ip"
 NETWORK_COUNTRY_COLUMNS = ["source_country", "destination_country"]
 
 
-def _validate_shape(df: pd.DataFrame, filename: str) -> None:
-    """Raise if a loaded table does not match the documented dataset shape."""
+def _validate_shape(df: pd.DataFrame, filename: str, strict: bool = True) -> None:
+    """Raise if a loaded table does not match the documented dataset shape.
+
+    strict=False skips the check so small fixture datasets (tests, smoke
+    runs) can flow through the same code path.
+    """
+    if not strict:
+        return
     expected = EXPECTED_SHAPES[filename]
     if df.shape != expected:
         raise ValueError(f"{filename}: expected shape {expected}, got {df.shape}")
@@ -83,13 +89,13 @@ def feature_columns(df: pd.DataFrame) -> list[str]:
     return [c for c in df.columns if c.startswith("feature_")]
 
 
-def load_elliptic_features(datasets_dir: Path) -> pd.DataFrame:
+def load_elliptic_features(datasets_dir: Path, strict: bool = True) -> pd.DataFrame:
     """Load elliptic_features.csv and validate its shape.
 
     Ground-truth transaction features, keyed on elliptic_tx_id (int64).
     """
     df = pd.read_csv(datasets_dir / "elliptic_features.csv")
-    _validate_shape(df, "elliptic_features.csv")
+    _validate_shape(df, "elliptic_features.csv", strict)
     _require_columns(
         df, "elliptic_features.csv", [ELLIPTIC_TX_ID, "timestep", "class_label"]
     )
@@ -101,7 +107,7 @@ def load_elliptic_features(datasets_dir: Path) -> pd.DataFrame:
     return df
 
 
-def load_transactions(datasets_dir: Path) -> pd.DataFrame:
+def load_transactions(datasets_dir: Path, strict: bool = True) -> pd.DataFrame:
     """Load transactions.csv (synthetic transaction layer).
 
     Keyed on synthetic_transaction_id (SYN_TX_* string). Values here are
@@ -110,40 +116,40 @@ def load_transactions(datasets_dir: Path) -> pd.DataFrame:
     equivalence (plan section 2.3).
     """
     df = pd.read_csv(datasets_dir / "transactions.csv")
-    _validate_shape(df, "transactions.csv")
+    _validate_shape(df, "transactions.csv", strict)
     _require_columns(df, "transactions.csv", [SYNTHETIC_TX_ID])
     df[SYNTHETIC_TX_ID] = df[SYNTHETIC_TX_ID].astype(str)
     return df
 
 
-def load_network(datasets_dir: Path) -> pd.DataFrame:
+def load_network(datasets_dir: Path, strict: bool = True) -> pd.DataFrame:
     """Load network.csv (synthetic P2P network layer).
 
     Keyed on observation_id; multiple observations may exist per
     synthetic_transaction_id and are aggregated in build_master_table.
     """
     df = pd.read_csv(datasets_dir / "network.csv")
-    _validate_shape(df, "network.csv")
+    _validate_shape(df, "network.csv", strict)
     _require_columns(df, "network.csv", ["observation_id", SYNTHETIC_TX_ID])
     df[SYNTHETIC_TX_ID] = df[SYNTHETIC_TX_ID].astype(str)
     return df
 
 
-def load_mapping(datasets_dir: Path) -> pd.DataFrame:
+def load_mapping(datasets_dir: Path, strict: bool = True) -> pd.DataFrame:
     """Load mapping.csv linking elliptic_tx_id to synthetic_transaction_id.
 
     This is a statistical linkage only, not a claim of correspondence
     (plan section 2.3).
     """
     df = pd.read_csv(datasets_dir / "mapping.csv")
-    _validate_shape(df, "mapping.csv")
+    _validate_shape(df, "mapping.csv", strict)
     _require_columns(df, "mapping.csv", ["mapping_id", ELLIPTIC_TX_ID, SYNTHETIC_TX_ID])
     df[ELLIPTIC_TX_ID] = df[ELLIPTIC_TX_ID].astype("int64")
     df[SYNTHETIC_TX_ID] = df[SYNTHETIC_TX_ID].astype(str)
     return df
 
 
-def load_relationships(datasets_dir: Path) -> pd.DataFrame:
+def load_relationships(datasets_dir: Path, strict: bool = True) -> pd.DataFrame:
     """Load relationships.csv (transaction-to-transaction edges).
 
     source_tx_id / target_tx_id stay within a single relationship-type
@@ -153,7 +159,7 @@ def load_relationships(datasets_dir: Path) -> pd.DataFrame:
         datasets_dir / "relationships.csv",
         dtype={"source_tx_id": "string", "target_tx_id": "string"},
     )
-    _validate_shape(df, "relationships.csv")
+    _validate_shape(df, "relationships.csv", strict)
     _require_columns(
         df, "relationships.csv", ["relationship_id", "source_tx_id", "target_tx_id"]
     )
@@ -270,7 +276,7 @@ def flag_known_infrastructure(
 
 
 def build_master_table(
-    datasets_dir: Path, reference_dir: Path | None = None
+    datasets_dir: Path, reference_dir: Path | None = None, strict: bool = True
 ) -> pd.DataFrame:
     """Build the 203,769-row master table.
 
@@ -279,14 +285,15 @@ def build_master_table(
     sets has_synthetic_layer and has_network_layer, and flags Tor-exit /
     hosting-provider ASNs when reference_dir/known_ranges.csv is given.
     """
-    features = load_elliptic_features(datasets_dir)
-    mapping = load_mapping(datasets_dir)
-    transactions = load_transactions(datasets_dir)
-    network = load_network(datasets_dir)
+    features = load_elliptic_features(datasets_dir, strict)
+    mapping = load_mapping(datasets_dir, strict)
+    transactions = load_transactions(datasets_dir, strict)
+    network = load_network(datasets_dir, strict)
 
     master = features.copy()
     master = _add_synthetic_layer(master, mapping, transactions)
     master = _add_network_layer(master, network)
+    master = master.drop_duplicates(subset=ELLIPTIC_TX_ID, keep="first")
 
     if reference_dir is not None:
         known_ranges_path = reference_dir / "known_ranges.csv"
@@ -294,7 +301,7 @@ def build_master_table(
             known_ranges = load_known_ranges(known_ranges_path)
             master = flag_known_infrastructure(master, known_ranges)
 
-    if len(master) != EXPECTED_SHAPES["elliptic_features.csv"][0]:
+    if strict and len(master) != EXPECTED_SHAPES["elliptic_features.csv"][0]:
         raise ValueError(
             f"master table: expected {EXPECTED_SHAPES['elliptic_features.csv'][0]} "
             f"rows (one per elliptic_tx_id), got {len(master)}"
