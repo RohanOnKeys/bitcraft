@@ -72,6 +72,8 @@ class AlertSummary:
     timestep: Optional[int] = None
     community_id: Optional[int] = None
     severity: Optional[SeverityTier] = None
+    # Supervised risk model probability (ml/risk_model.py).
+    model_score: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -92,6 +94,8 @@ class ShapReason:
 
     feature_index: int
     contribution: float
+    # Column name; engineered features (graph, network) have feature_index -1.
+    feature: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -113,6 +117,7 @@ class AlertDetail:
     community_id: Optional[int] = None
     severity: Optional[SeverityTier] = None
     evidence_items: Optional[list[EvidenceItem]] = None
+    model_score: Optional[float] = None
 
 
 @dataclass(frozen=True)

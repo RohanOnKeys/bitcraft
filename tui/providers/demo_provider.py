@@ -30,10 +30,11 @@ from tui.providers.models import (
     ThreatOverview,
 )
 
-# Mirrored from ml/config.yaml (plans/plan.md section 7).
-ANOMALY_WEIGHT = 0.60
-COMMUNITY_WEIGHT = 0.25
-NETWORK_WEIGHT = 0.15
+# Mirrored from ml/config.yaml score_fusion.
+MODEL_WEIGHT = 0.65
+ANOMALY_WEIGHT = 0.05
+COMMUNITY_WEIGHT = 0.20
+NETWORK_WEIGHT = 0.10
 
 TOTAL_TRANSACTIONS = 203_769
 LABELED_COVERAGE_PCT = 22.9
@@ -114,7 +115,8 @@ class DemoProvider:
         for i in range(ALERT_COUNT):
             # Heavy tail: small critical head, long low tail.
             u = (i + 1) / ALERT_COUNT
-            anomaly = max(0.0, min(1.0, (1.0 - u) ** 0.25 + rng.gauss(0, 0.02)))
+            model = max(0.0, min(1.0, (1.0 - u) ** 0.25 + rng.gauss(0, 0.02)))
+            anomaly = max(0.0, min(1.0, rng.betavariate(2, 3)))
             community = rng.choice(self._communities)
             if community.illicit_ratio is None:
                 community_risk = rng.uniform(0.0, 0.15)
@@ -125,7 +127,7 @@ class DemoProvider:
                 )
             # Guarantee a critical head for display tiers (>= 0.80 composite).
             if i < 120:
-                anomaly = max(anomaly, 0.98)
+                model = max(model, 0.98)
                 community_risk = max(community_risk, 0.85)
             has_network = rng.random() < (NETWORK_COVERAGE_PCT / 100.0)
             has_synthetic = has_network or (
@@ -136,7 +138,8 @@ class DemoProvider:
             else:
                 network_signal = 0.0
             composite = (
-                ANOMALY_WEIGHT * anomaly
+                MODEL_WEIGHT * model
+                + ANOMALY_WEIGHT * anomaly
                 + COMMUNITY_WEIGHT * community_risk
                 + NETWORK_WEIGHT * network_signal
             )
@@ -155,6 +158,7 @@ class DemoProvider:
                     timestep=rng.randint(1, 49),
                     community_id=community.community_id,
                     severity=severity,
+                    model_score=model,
                 )
             )
             community_alert_counts[community.community_id] += 1
@@ -175,6 +179,7 @@ class DemoProvider:
                     timestep=row.timestep,
                     community_id=row.community_id,
                     severity=row.severity,
+                    model_score=row.model_score,
                 )
             )
         self._alerts = ranked
@@ -345,6 +350,7 @@ class DemoProvider:
             community_id=row.community_id,
             severity=row.severity,
             evidence_items=evidence_items,
+            model_score=row.model_score,
         )
 
     def subgraph(self, tx_id: int, depth: int = 1) -> Subgraph:
