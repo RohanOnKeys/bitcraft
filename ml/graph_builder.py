@@ -78,12 +78,13 @@ def compute_graph_features(graph: nx.Graph) -> pd.DataFrame:
     return features
 
 
-def detect_communities(graph: nx.Graph) -> pd.DataFrame:
+def detect_communities(graph: nx.Graph, random_state: int = 42) -> pd.DataFrame:
     """Run Louvain community detection and assign community_id.
 
-    Returns one row per graph node, indexed by the raw node ID.
+    Returns one row per graph node, indexed by the raw node ID. Seeded so
+    reruns on the same data give the same partition (plan section 9.3).
     """
-    partition = community_louvain.best_partition(graph)
+    partition = community_louvain.best_partition(graph, random_state=random_state)
     return pd.DataFrame(
         {
             NODE_ID_COLUMN: list(partition.keys()),
