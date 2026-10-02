@@ -23,6 +23,7 @@ from tui.screens.dashboard import DashboardScreen
 from tui.screens.graph_explorer import GraphExplorerScreen
 from tui.screens.splash import SplashScreen
 from tui.screens.threat_detection import ThreatDetectionScreen
+from tui.screens.wallets import WalletsScreen
 from tui.store import Store
 
 
@@ -83,6 +84,7 @@ class BitCraftApp(App):
         "dashboard": DashboardScreen,
         "graph": GraphExplorerScreen,
         "threats": ThreatDetectionScreen,
+        "wallets": WalletsScreen,
     }
     DEFAULT_MODE = "dashboard"
     BINDINGS = [
@@ -90,6 +92,7 @@ class BitCraftApp(App):
         Binding("d", "show_dashboard", "Dashboard", priority=True),
         Binding("g", "show_graph", "Graph", priority=True),
         Binding("t", "show_threats", "Threats", priority=True),
+        Binding("w", "show_wallets", "Wallets", priority=True),
         Binding("escape", "go_home", "Home", priority=True),
     ]
 
@@ -125,7 +128,7 @@ class BitCraftApp(App):
 
     def _pop_overlays(self) -> None:
         """Pop pushed overlays until a mode screen is on top."""
-        mode_types = (DashboardScreen, GraphExplorerScreen, ThreatDetectionScreen)
+        mode_types = (DashboardScreen, GraphExplorerScreen, ThreatDetectionScreen, WalletsScreen)
         while len(self.screen_stack) > 1 and not isinstance(self.screen, mode_types):
             self.pop_screen()
 
@@ -148,6 +151,13 @@ class BitCraftApp(App):
         if isinstance(self.screen, (SplashScreen, BootScreen)):
             return
         self.switch_mode("threats")
+        self._pop_overlays()
+
+    def action_show_wallets(self) -> None:
+        """Switch to wallets mode."""
+        if isinstance(self.screen, (SplashScreen, BootScreen)):
+            return
+        self.switch_mode("wallets")
         self._pop_overlays()
 
     def action_go_home(self) -> None:
