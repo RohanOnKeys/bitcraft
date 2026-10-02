@@ -20,6 +20,7 @@ class Transaction(Base):
     class_label = Column(SmallInteger, nullable=True)
     has_synthetic_layer = Column(Boolean, nullable=False, default=False)
     has_network_layer = Column(Boolean, nullable=False, default=False)
+    has_metadata = Column(Boolean, nullable=False, default=False)
     community_id = Column(Integer, nullable=True, index=True)
     degree = Column(Integer, nullable=True)
     pagerank = Column(Float, nullable=True)
