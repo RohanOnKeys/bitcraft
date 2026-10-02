@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Built by packaging/build_packages.py, which syncs <version> with tui/__init__.py. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>bitcraft</id>
+    <version>0.1.0</version>
+    <title>BitCraft</title>
+    <authors>Rohan Pattanayak, Jagadish Pattnaik, Shreya Mishra, Shreya Mohanty, Ashutosh Badapada, Rosalin Nayak</authors>
+    <owners>Rohan Pattanayak</owners>
+    <copyright>Copyright 2026 The BitCraft Authors</copyright>
+    <projectUrl>https://github.com/RohanOnKeys/bitcraft</projectUrl>
+    <projectSourceUrl>https://github.com/RohanOnKeys/bitcraft</projectSourceUrl>
+    <bugTrackerUrl>https://github.com/RohanOnKeys/bitcraft/issues</bugTrackerUrl>
+    <licenseUrl>https://github.com/RohanOnKeys/bitcraft/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <tags>bitcraft bitcoin aml fraud-detection blockchain tui terminal cli</tags>
+    <summary>Bitcoin transaction intelligence in your terminal.</summary>
+    <description><![CDATA[
+BitCraft ranks suspicious Bitcoin transactions and lets you investigate them in
+the terminal: ranked alerts, provenance-tagged evidence, SHAP reasons and an
+animated link-analysis view.
+
+After installing, run `bitcraft` from any terminal to open it in a new, large
+window. `bitcraft demo` uses built-in demo data; `bitcraft --help` lists the
+other commands.
+
+BitCraft connects to a BitCraft API at http://localhost:8000 (see the source
+repository for the API and ML pipeline) and falls back to demo data when none
+is running.
+]]></description>
+    <releaseNotes>https://github.com/RohanOnKeys/bitcraft/releases</releaseNotes>
+    <dependencies>
+      <dependency id="python3" version="3.10.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
