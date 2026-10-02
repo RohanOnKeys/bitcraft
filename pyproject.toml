@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "bitcraft"
 dynamic = ["version"]
 description = "Bitcoin transaction intelligence in your terminal: ranked alerts, evidence and link analysis."
-readme = "packaging/PYPI_README.md"
+readme = "packages/PYPI_README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
@@ -52,4 +52,4 @@ version = { attr = "tui.__version__" }
 include = ["tui*"]
 
 [tool.setuptools.package-data]
-tui = ["theme.tcss", "assets/mascot/*.png"]
+tui = ["theme.tcss", "assets/mascots/*.png"]

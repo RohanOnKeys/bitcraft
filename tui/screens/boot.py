@@ -16,7 +16,7 @@ from textual.widgets import Footer, ProgressBar, RichLog, Static
 
 from tui.providers.factory import create_provider
 from tui.providers.models import ProviderError
-from tui.widgets.charts import ramp
+from tui.widgets.chart import ramp
 from tui.widgets.logo import Logo
 from tui.widgets.mini_frog import MiniFrog
 from tui.widgets.mascot import NATIVE_WIDTH, Mascot

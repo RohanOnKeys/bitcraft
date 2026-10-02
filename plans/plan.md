@@ -141,7 +141,7 @@ The implementation must follow this staged pipeline.
 
 | Stage | Component | Responsibility |
 |---|---|---|
-| 0 - Environment Setup | Docker | Offline Linux container, GeoLite2 reference data, `known_ranges.csv`, dataset baked into image |
+| 0 - Environment Setup | Docker | Offline Linux container, GeoLite2 reference data, `known_range.csv`, dataset baked into image |
 | 1 - Ingestion | `ml/data_loader.py` | Load all 5 CSVs, validate dtypes/shapes, build master table |
 | 2 - Enrichment | `ml/data_loader.py` | Add coverage flags and flag Tor-exit/hosting-provider ASNs |
 | 3 - Graph Construction | `ml/graph_builder.py` | Build transaction graph from `relationships.csv` |

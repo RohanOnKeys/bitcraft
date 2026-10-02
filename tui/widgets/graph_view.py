@@ -3,7 +3,7 @@
 The focus transaction sits in the middle with a pulsing ripple; community
 hubs orbit it slowly, each fanning out to its members. Bright packets run
 along the edges so the graph reads as live flow. Stub data for now (see
-tui/helpers/stub_charts.py); GET /graph/{tx_id} will replace it.
+tui/helpers/stub_chart.py); GET /graph/{tx_id} will replace it.
 """
 
 from __future__ import annotations
@@ -14,9 +14,9 @@ from rich.style import Style
 from rich.text import Text
 from textual.widget import Widget
 
-from tui.helpers.stub_charts import StubCluster, StubNetwork, StubNode, stub_network
+from tui.helpers.stub_chart import StubCluster, StubNetwork, StubNode, stub_network
 from tui.providers.models import LinkGraph, ProviderError, Subgraph
-from tui.widgets.charts import (
+from tui.widgets.chart import (
     CHROME,
     CRIMSON,
     MUTED,

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ml.addresses import SCRIPT_TYPES, base58check_valid, bech32_valid, make_address, script_type_of
+from ml.address import SCRIPT_TYPES, base58check_valid, bech32_valid, make_address, script_type_of
 from ml.ingest import REQUIRED_FIELDS
 from ml.metadata_generator import generate
 from tests.ml.fixture_data import TEST_POOLS as POOLS

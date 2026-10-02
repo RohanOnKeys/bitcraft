@@ -47,5 +47,5 @@ dist/
 build/
 *.egg-info/
 *.nupkg
-packaging/chocolatey/tools/*.whl
-packaging/chocolatey/tools/LICENSE.txt
+packages/chocolatey/tools/*.whl
+packages/chocolatey/tools/LICENSE.txt

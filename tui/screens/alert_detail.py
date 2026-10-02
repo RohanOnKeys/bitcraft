@@ -18,13 +18,13 @@ from tui.providers.demo_provider import (
     NETWORK_WEIGHT,
 )
 from tui.providers.models import ProviderError
-from tui.widgets.chart_panels import (
+from tui.widgets.chart_panel import (
     DRIVER_COLOURS,
     driver_bars,
     score_gauge,
     severity_colour,
 )
-from tui.widgets.charts import CHROME, MUTED, PINK, SALMON, TEXT, YELLOW, hbar
+from tui.widgets.chart import CHROME, MUTED, PINK, SALMON, TEXT, YELLOW, hbar
 from tui.widgets.graph_view import GraphView
 from tui.widgets.header_bar import HeaderBar
 from tui.widgets.panel_state import PanelState

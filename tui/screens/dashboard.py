@@ -20,8 +20,8 @@ from tui.providers.demo_provider import (
 from tui.providers.models import ProviderError
 from tui.screens.alert_detail import AlertDetailScreen
 from tui.widgets.alert_list import AlertList
-from tui.widgets.chart_panels import DRIVER_COLOURS, driver_bars, score_gauge, severity_colour
-from tui.widgets.charts import MUTED, TEXT, YELLOW, column_chart
+from tui.widgets.chart_panel import DRIVER_COLOURS, driver_bars, score_gauge, severity_colour
+from tui.widgets.chart import MUTED, TEXT, YELLOW, column_chart
 from tui.widgets.filter_panel import FilterPanel
 from tui.widgets.header_bar import HeaderBar
 from tui.widgets.kpi_summary import KpiSummary

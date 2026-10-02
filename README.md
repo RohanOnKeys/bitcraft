@@ -120,7 +120,7 @@ root without installing anything.
 
 Inside a source checkout with a loaded database, `bitcraft` also starts the
 API in the background and stops it when you quit. Release builds:
-`python packaging/build_packages.py` (wheel, sdist and the Chocolatey
+`python packages/build_package.py` (wheel, sdist and the Chocolatey
 package).
 
 ### Model and backend (live data)

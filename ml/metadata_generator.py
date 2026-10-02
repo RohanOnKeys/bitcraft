@@ -45,10 +45,10 @@ import numpy as np
 import pandas as pd
 
 from ml import geoip
-from ml.addresses import SCRIPT_TYPES, make_address
+from ml.address import SCRIPT_TYPES, make_address
 
 DEFAULT_OUT = Path("datasets/metadata")
-KNOWN_RANGES = Path(__file__).resolve().parent / "reference" / "known_ranges.csv"
+KNOWN_RANGES = Path(__file__).resolve().parent / "references" / "known_range.csv"
 
 # Owner counts at full size; smaller inputs scale down so owners still
 # transact repeatedly (about 5 licit / 15 illicit transactions per owner).

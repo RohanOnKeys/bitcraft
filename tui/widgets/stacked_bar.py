@@ -6,7 +6,7 @@ from rich.style import Style
 from rich.text import Text
 from textual.widget import Widget
 
-from tui.widgets.charts import CRIMSON, MUTED, ORANGE, YELLOW
+from tui.widgets.chart import CRIMSON, MUTED, ORANGE, YELLOW
 
 
 class StackedBar(Widget):

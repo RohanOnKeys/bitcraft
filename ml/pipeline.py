@@ -333,7 +333,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--datasets", type=Path, default=Path("datasets"))
     parser.add_argument("--config", type=Path, default=Path("ml/config.yaml"))
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--reference", type=Path, default=None, help="dir with known_ranges.csv")
+    parser.add_argument("--reference", type=Path, default=None, help="dir with known_range.csv")
     parser.add_argument("--no-strict", action="store_true", help="skip exact dataset shape checks")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")

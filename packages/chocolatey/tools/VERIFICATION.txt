@@ -4,7 +4,7 @@ in verifying that this package's contents are trustworthy.
 
 This package embeds the BitCraft wheel (bitcraft-<version>-py3-none-any.whl),
 built from https://github.com/RohanOnKeys/bitcraft by
-packaging/build_packages.py and identical to the wheel published on PyPI:
+packages/build_package.py and identical to the wheel published on PyPI:
 
     https://pypi.org/project/bitcraft/#files
 

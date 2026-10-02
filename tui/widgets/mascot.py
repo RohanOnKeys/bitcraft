@@ -1,6 +1,6 @@
 """Pixel frog mascot drawn with half-block characters.
 
-Art lives in tui/assets/mascot/<mood>.png: one frog per mood on a shared
+Art lives in tui/assets/mascots/<mood>.png: one frog per mood on a shared
 56x32 canvas (the art's native pixel grid, cut from the sprite sheet)
 with a transparent background, bottom-aligned so switching
 moods never makes the frog jump. Each PNG is downsampled to the requested
@@ -33,7 +33,7 @@ from textual.reactive import reactive
 from textual.timer import Timer
 from textual.widgets import Static
 
-ASSET_DIR = Path(__file__).resolve().parent.parent / "assets" / "mascot"
+ASSET_DIR = Path(__file__).resolve().parent.parent / "assets" / "mascots"
 
 IDLE_MOODS: tuple[str, ...] = (
     "neutral",

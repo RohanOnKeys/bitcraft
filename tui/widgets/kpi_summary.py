@@ -8,12 +8,12 @@ from textual.containers import Horizontal
 from textual.widget import Widget
 from textual.widgets import Static
 
-from tui.helpers import stub_charts
+from tui.helpers import stub_chart
 from tui.helpers.format import format_int, format_pct
-from tui.widgets.charts import sparkline
+from tui.widgets.chart import sparkline
 
 # Stub 16-point trends under each KPI until the API serves history.
-_TREND = stub_charts.alerts_by_timestep
+_TREND = stub_chart.alerts_by_timestep
 SPARK_SERIES = {
     "#kpi-tx": _TREND(21)[:16],
     "#kpi-alerts": _TREND(22)[18:34],

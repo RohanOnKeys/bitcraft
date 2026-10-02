@@ -29,7 +29,7 @@ Textual (Python). Floor: `textual>=5.0` for `App.MODES` / `switch_mode`.
 
 ## Mascot
 
-A gold pixel frog (`tui/widgets/mascot.py`, art in `tui/assets/mascot/`),
+A gold pixel frog (`tui/widgets/mascot.py`, art in `tui/assets/mascots/`),
 drawn with half-block characters and downsampled by Pillow at runtime.
 
 | Mood | When |

@@ -15,8 +15,8 @@ from textual.screen import Screen
 from textual.widgets import DataTable, Footer, Static
 
 from tui.providers.models import ProviderError, WalletDetail, WalletPage
-from tui.widgets.chart_panels import score_gauge, severity_colour
-from tui.widgets.charts import CHROME, GOLD, MUTED, PINK, SALMON, TEXT, YELLOW, hbar
+from tui.widgets.chart_panel import score_gauge, severity_colour
+from tui.widgets.chart import CHROME, GOLD, MUTED, PINK, SALMON, TEXT, YELLOW, hbar
 from tui.widgets.graph_view import GraphView, network_from_link_graph
 from tui.widgets.header_bar import HeaderBar
 

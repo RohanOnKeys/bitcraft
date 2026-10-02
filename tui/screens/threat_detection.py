@@ -14,8 +14,8 @@ from tui.helpers.severity import severity_for_score
 from tui.providers.models import AlertQuery, AlertSummary, ProviderError
 from tui.screens.alert_detail import AlertDetailScreen
 from tui.widgets.community_table import CommunityTable
-from tui.widgets.chart_panels import DRIVER_COLOURS, driver_bars, severity_colour
-from tui.widgets.charts import (
+from tui.widgets.chart_panel import DRIVER_COLOURS, driver_bars, severity_colour
+from tui.widgets.chart import (
     CHROME,
     GOLD,
     MUTED,

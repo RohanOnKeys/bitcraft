@@ -1,9 +1,9 @@
 """Build the pip and Chocolatey packages from one version number.
 
-    python packaging/build_packages.py
+    python packages/build_package.py
 
 1. Builds the wheel and sdist into dist/ (python -m build).
-2. Copies the wheel and LICENSE into packaging/chocolatey/tools/ and syncs
+2. Copies the wheel and LICENSE into packages/chocolatey/tools/ and syncs
    the nuspec <version> with tui/__init__.py.
 3. Runs `choco pack` into dist/ when Chocolatey is installed.
 
@@ -22,7 +22,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 DIST = REPO / "dist"
-CHOCO = REPO / "packaging" / "chocolatey"
+CHOCO = REPO / "packages" / "chocolatey"
 TOOLS = CHOCO / "tools"
 NUSPEC = CHOCO / "bitcraft.nuspec"
 
@@ -57,7 +57,7 @@ def stage_chocolatey(ver: str, wheel: Path) -> None:
 def pack_chocolatey(ver: str) -> Path | None:
     choco = shutil.which("choco")
     if not choco:
-        print("choco not found: skipped `choco pack` (staged files are ready in packaging/chocolatey).")
+        print("choco not found: skipped `choco pack` (staged files are ready in packages/chocolatey).")
         return None
     subprocess.run([choco, "pack", str(NUSPEC), "--outputdirectory", str(DIST)], check=True)
     return DIST / f"bitcraft.{ver}.nupkg"
@@ -72,7 +72,7 @@ def main() -> None:
     for path in sorted(DIST.glob(f"bitcraft*{ver}*")):
         print(f"  {path.relative_to(REPO)}")
     if nupkg is None:
-        print("  (Chocolatey package: run `choco pack packaging/chocolatey/bitcraft.nuspec` on Windows)")
+        print("  (Chocolatey package: run `choco pack packages/chocolatey/bitcraft.nuspec` on Windows)")
 
 
 if __name__ == "__main__":

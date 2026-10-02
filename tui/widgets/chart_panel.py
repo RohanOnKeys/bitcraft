@@ -1,6 +1,6 @@
 """Chart panel widgets that size themselves to their container.
 
-Each panel renders from stub series (tui/helpers/stub_charts.py) and
+Each panel renders from stub series (tui/helpers/stub_chart.py) and
 redraws on resize; a few carry a gentle animation so the screen feels live.
 """
 
@@ -12,8 +12,8 @@ from rich.style import Style
 from rich.text import Text
 from textual.widget import Widget
 
-from tui.helpers import stub_charts
-from tui.widgets.charts import (
+from tui.helpers import stub_chart
+from tui.widgets.chart import (
     CHROME,
     CRIMSON,
     DIM,
@@ -60,7 +60,7 @@ class TimestepChart(_Animated):
 
     def __init__(self, series: Sequence[float] | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.series = list(series or stub_charts.alerts_by_timestep())
+        self.series = list(series or stub_chart.alerts_by_timestep())
 
     def render(self) -> Text:
         w, h = self.size.width, self.size.height
@@ -180,7 +180,7 @@ class CommunityBars(_Animated):
 
     def __init__(self, rows: Sequence[tuple[str, float, int]] | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.rows = list(rows or stub_charts.community_risk_bars())
+        self.rows = list(rows or stub_chart.community_risk_bars())
 
     def render(self) -> Text:
         w, h = self.size.width, self.size.height
@@ -208,7 +208,7 @@ class HeatmapChart(Widget):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.matrix = stub_charts.activity_heatmap()
+        self.matrix = stub_chart.activity_heatmap()
 
     def render(self) -> Text:
         w, h = self.size.width, self.size.height
@@ -246,7 +246,7 @@ class FlowChart(_Animated):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.inbound, self.outbound = stub_charts.flow_series()
+        self.inbound, self.outbound = stub_chart.flow_series()
 
     def render(self) -> Text:
         w, h = self.size.width, self.size.height
@@ -286,7 +286,7 @@ class DegreeChart(Widget):
         w, h = self.size.width, self.size.height
         if w < 10 or h < 3:
             return Text("")
-        data = stub_charts.degree_distribution()
+        data = stub_chart.degree_distribution()
         n = min(len(data), w // 2)
         body = column_chart(data[:n], h - 1, ramp_stops=(YELLOW, CHROME, ORANGE, SALMON, PINK), gap=True)
         body.append("\n")

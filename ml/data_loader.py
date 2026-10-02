@@ -283,7 +283,7 @@ def build_master_table(
     One row per elliptic_tx_id. Joins the synthetic layer through
     mapping.csv and the network layer through synthetic_transaction_id,
     sets has_synthetic_layer and has_network_layer, and flags Tor-exit /
-    hosting-provider ASNs when reference_dir/known_ranges.csv is given.
+    hosting-provider ASNs when reference_dir/known_range.csv is given.
     """
     features = load_elliptic_features(datasets_dir, strict)
     mapping = load_mapping(datasets_dir, strict)
@@ -296,7 +296,7 @@ def build_master_table(
     master = master.drop_duplicates(subset=ELLIPTIC_TX_ID, keep="first")
 
     if reference_dir is not None:
-        known_ranges_path = reference_dir / "known_ranges.csv"
+        known_ranges_path = reference_dir / "known_range.csv"
         if known_ranges_path.exists():
             known_ranges = load_known_ranges(known_ranges_path)
             master = flag_known_infrastructure(master, known_ranges)

@@ -23,7 +23,7 @@ from tui.screens.dashboard import DashboardScreen
 from tui.screens.graph_explorer import GraphExplorerScreen
 from tui.screens.splash import SplashScreen
 from tui.screens.threat_detection import ThreatDetectionScreen
-from tui.screens.wallets import WalletsScreen
+from tui.screens.wallet import WalletsScreen
 from tui.store import Store
 
 

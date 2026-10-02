@@ -1,6 +1,6 @@
 """Graph explorer: connectivity graph plus supporting chart panels.
 
-Stub data throughout (tui/helpers/stub_charts.py) until the graph endpoints
+Stub data throughout (tui/helpers/stub_chart.py) until the graph endpoints
 land; the layout and widgets are the real ones.
 """
 
@@ -11,8 +11,8 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Static
 
-from tui.helpers import stub_charts
-from tui.widgets.chart_panels import (
+from tui.helpers import stub_chart
+from tui.widgets.chart_panel import (
     CommunityBars,
     DegreeChart,
     DonutChart,
@@ -22,8 +22,8 @@ from tui.widgets.chart_panels import (
     TimestepChart,
 )
 from tui.helpers.drivers import weighted_parts
-from tui.widgets.chart_panels import DRIVER_COLOURS
-from tui.widgets.charts import CHROME, CRIMSON, MUTED, ORANGE, PINK, SALMON, YELLOW
+from tui.widgets.chart_panel import DRIVER_COLOURS
+from tui.widgets.chart import CHROME, CRIMSON, MUTED, ORANGE, PINK, SALMON, YELLOW
 from tui.widgets.graph_view import GraphView, graph_legend
 from tui.widgets.header_bar import HeaderBar
 
@@ -44,18 +44,18 @@ class GraphExplorerScreen(Screen):
                 with Vertical(id="graph-side"):
                     yield StatTiles(
                         [
-                            ("nodes", "2,184", stub_charts.alerts_by_timestep(1), YELLOW),
-                            ("edges", "6,911", stub_charts.alerts_by_timestep(2), CHROME),
-                            ("communities", "41", stub_charts.alerts_by_timestep(4), ORANGE),
-                            ("density", "0.0029", stub_charts.alerts_by_timestep(6), SALMON),
-                            ("max degree", "412", stub_charts.degree_distribution(), PINK),
+                            ("nodes", "2,184", stub_chart.alerts_by_timestep(1), YELLOW),
+                            ("edges", "6,911", stub_chart.alerts_by_timestep(2), CHROME),
+                            ("communities", "41", stub_chart.alerts_by_timestep(4), ORANGE),
+                            ("density", "0.0029", stub_chart.alerts_by_timestep(6), SALMON),
+                            ("max degree", "412", stub_chart.degree_distribution(), PINK),
                         ],
                         id="graph-stats",
                         classes="panel",
                     )
                     yield DonutChart(
                         [(n, v, c) for (n, v), c in zip(
-                            stub_charts.driver_mix(), (SALMON, CHROME, PINK)
+                            stub_chart.driver_mix(), (SALMON, CHROME, PINK)
                         )],
                         label="0.87",
                         sublabel="score",
@@ -66,7 +66,7 @@ class GraphExplorerScreen(Screen):
                 yield TimestepChart(id="graph-timeline", classes="panel")
                 yield DonutChart(
                     [(n, v, c) for (n, v), c in zip(
-                        stub_charts.score_mix(), (CRIMSON, ORANGE, YELLOW, MUTED)
+                        stub_chart.score_mix(), (CRIMSON, ORANGE, YELLOW, MUTED)
                     )],
                     label="4,483",
                     sublabel="alerts",
@@ -142,7 +142,7 @@ class GraphExplorerScreen(Screen):
                 (f"C{c.community_id}", float(c.illicit_ratio), c.size) for c in ranked[:8]
             ]
         if stats is not None:
-            trend = per_ts or stub_charts.alerts_by_timestep(1)
+            trend = per_ts or stub_chart.alerts_by_timestep(1)
             crit = threat.critical_count if threat is not None else 0
             self.query_one("#graph-stats", StatTiles).stats = [
                 ("transactions", f"{stats.total_transactions:,}", trend, YELLOW),

@@ -22,9 +22,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ml.addresses import SCRIPT_TYPES, script_type_of
+from ml.address import SCRIPT_TYPES, script_type_of
 
-KNOWN_RANGES = Path(__file__).resolve().parent / "reference" / "known_ranges.csv"
+KNOWN_RANGES = Path(__file__).resolve().parent / "references" / "known_range.csv"
 P2P_PORT = 8333
 TOR_PORTS = (9050, 9150)
 # A peel step: one input, two outputs, the smaller output under this share.
