@@ -118,6 +118,7 @@ class AlertDetail:
     severity: Optional[SeverityTier] = None
     evidence_items: Optional[list[EvidenceItem]] = None
     model_score: Optional[float] = None
+    metadata: Optional["TxMeta"] = None
 
 
 @dataclass(frozen=True)
@@ -205,3 +206,93 @@ class ProviderError(Exception):
 
     def __str__(self) -> str:
         return self.message
+
+
+@dataclass(frozen=True)
+class TxMeta:
+    """Network + blockchain metadata for one transaction (GET /metadata)."""
+
+    txid: str
+    src_ip: str
+    src_port: int
+    dst_ip: str
+    dst_port: int
+    entity_id: int
+    metadata_score: float
+    src_country: Optional[str] = None
+    src_asn_org: Optional[str] = None
+    dst_country: Optional[str] = None
+    script_type: Optional[str] = None
+    n_inputs: int = 0
+    n_outputs: int = 0
+    total_in_btc: float = 0.0
+    fee: float = 0.0
+    peel_chain_len: int = 0
+    tor: bool = False
+    elliptic_tx_id: Optional[int] = None
+    entity_rank: Optional[int] = None
+    entity_risk: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class WalletSummary:
+    """One ranked wallet (address cluster) alert."""
+
+    entity_id: int
+    rank: int
+    risk_score: float
+    severity: SeverityTier
+    n_addresses: int
+    n_txs: int
+    total_in_btc: float
+    distinct_src_ips: int
+    distinct_src_countries: int
+    tor_share: float
+    peel_chain_max: int
+    linked_alerts: int = 0
+
+
+@dataclass(frozen=True)
+class WalletPage:
+    """One page of ranked wallets."""
+
+    items: list[WalletSummary]
+    total: int
+    offset: int
+    limit: int
+
+
+@dataclass(frozen=True)
+class WalletDetail:
+    """Evidence, addresses, transactions and IPs for one wallet."""
+
+    summary: WalletSummary
+    evidence_text: str
+    evidence_items: list[EvidenceItem]
+    countries: list[str] = field(default_factory=list)
+    addresses: list[str] = field(default_factory=list)
+    transactions: list[TxMeta] = field(default_factory=list)
+    shap_reasons: Optional[list[ShapReason]] = None
+
+
+@dataclass(frozen=True)
+class LinkNode:
+    """Wallet link-graph node: entity, address, tx or ip."""
+
+    id: str
+    kind: str
+    label: str
+    score: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class LinkEdge:
+    source: str
+    target: str
+    relation: str
+
+
+@dataclass(frozen=True)
+class LinkGraph:
+    nodes: list[LinkNode]
+    edges: list[LinkEdge]
