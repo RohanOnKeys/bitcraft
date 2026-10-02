@@ -1,6 +1,7 @@
 # Dataset Provenance
 
-Status: draft. Owned by the Documentation and PM team member, due Milestone 1.
+What every BitCraft dataset is, where it comes from, and which values
+are real and which are synthetic.
 
 ## Source
 
@@ -8,6 +9,35 @@ Status: draft. Owned by the Documentation and PM team member, due Milestone 1.
 
 Combines real, labeled Bitcoin transaction data from the Elliptic dataset
 with synthetically generated transaction and P2P network layers.
+
+```mermaid
+flowchart TD
+    subgraph Real["Real data"]
+        ELL["Elliptic Data Set<br/>203,769 transactions,<br/>166 features, labels, graph"]
+    end
+    subgraph Base["Base dataset (Rosalin Nayak, Kaggle)"]
+        EF["elliptic_features.csv"]
+        REL["relationships.csv"]
+        MAP["mapping.csv"]
+        TX["transactions.csv<br/>synthetic amounts, fees, times"]
+        NET["network.csv<br/>synthetic P2P observations"]
+    end
+    subgraph Meta["Challenge-format layer (ml/metadata_generator.py)"]
+        BM["bitcoin_metadata<br/>CSV / JSON / XML"]
+        ENR["bitcoin_metadata_enriched<br/>+ country, ASN"]
+    end
+    GEO["DB-IP Lite<br/>country + ASN"]
+
+    ELL --> EF
+    ELL --> REL
+    EF --> MAP --> TX
+    TX --> NET
+    TX --> BM
+    NET --> BM
+    GEO --> BM
+    BM -- "python -m ml.ingest --enrich" --> ENR
+    GEO --> ENR
+```
 
 ## Sources
 
@@ -38,11 +68,29 @@ generates an entirely synthetic dataset in the same format instead.
 
 ## Tables
 
-See `plans/plan.md` section 3.1 for shapes, primary keys, and linkage.
+| Table | Shape | Primary key | Linkage | Origin |
+| --- | ---: | --- | --- | --- |
+| `elliptic_features.csv` | 203,769 x 170 | `elliptic_tx_id` | Ground-truth features and labels | Real (Elliptic) |
+| `relationships.csv` | 245,856 x 6 | `relationship_id` | `source_tx_id`, `target_tx_id` | 234,355 real Elliptic edges, 11,501 synthetic temporal links |
+| `mapping.csv` | 50,000 x 6 | `mapping_id` | `elliptic_tx_id` to `synthetic_transaction_id` | Statistical, timestep matched |
+| `transactions.csv` | 50,000 x 16 | `synthetic_transaction_id` | Through `mapping.csv` | Synthetic |
+| `network.csv` | 40,854 x 13 | `observation_id` | `synthetic_transaction_id` | Synthetic |
+
+The relationship diagram for these tables is in `docs/architecture.md`.
 
 ## Coverage
 
-See `plans/plan.md` section 3.2 for coverage statistics.
+| Measure | Value |
+| --- | ---: |
+| Transactions (Elliptic universe) | 203,769 |
+| With a synthetic transaction record | 50,000 (about 24.5%) |
+| Network observations | 40,854 |
+| Full coverage: features, amounts and network | about 12% |
+| Known labels | 22.9% (2.2% illicit, 20.6% licit) |
+| Unknown labels | 77.1% |
+
+Coverage drives every score: a transaction without network data gets no
+network signal and shows `n/a`, never a low score.
 
 ## Metadata layer (challenge format)
 
