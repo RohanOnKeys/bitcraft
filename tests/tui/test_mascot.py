@@ -52,8 +52,11 @@ def test_lift_raises_the_frog() -> None:
 
 
 @pytest.mark.asyncio
-async def test_dashboard_mascot_stays_on_idle_cycle() -> None:
-    """Dashboard frog rests happy even on a critical selection (no panic art)."""
+async def test_frogs_only_on_loading_screens() -> None:
+    """Data pages stay frog-free; the splash keeps its frog."""
+    from tui.screens.splash import SplashScreen
+    from tui.widgets.mini_frog import MiniFrog
+
     app = BitCraftApp(
         store=Store(
             provider=DemoProvider(simulate_latency=False),
@@ -62,13 +65,16 @@ async def test_dashboard_mascot_stays_on_idle_cycle() -> None:
             boot_log=["test"],
         )
     )
-    async with app.run_test(size=(140, 40)) as pilot:
+    async with app.run_test(size=(180, 50)) as pilot:
+        assert isinstance(app.screen, SplashScreen)
+        assert app.screen.query(Mascot) and app.screen.query(MiniFrog)
         await pilot.press("enter")
         for _ in range(200):
             if isinstance(app.screen, DashboardScreen) and app.store.boot_complete:
                 break
             await pilot.pause(0.05)
-        await pilot.pause(0.1)
-        mascot = app.screen.query_one("#dashboard-mascot", Mascot)
-        assert app.store.alert_page.items[0].severity == "critical"
-        assert mascot.base_mood == "happy"
+        for key in ("d", "t", "g", "w"):
+            await pilot.press(key)
+            await pilot.pause(0.2)
+            assert not app.screen.query(Mascot), key
+            assert not app.screen.query(MiniFrog), key
