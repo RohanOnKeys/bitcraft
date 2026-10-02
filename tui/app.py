@@ -11,8 +11,9 @@ import argparse
 import os
 from typing import Optional
 
-from textual.app import App
+from textual.app import App, ScreenStackError
 from textual.binding import Binding
+from textual.theme import Theme
 
 from tui.api_client import DEFAULT_BASE_URL
 from tui.providers.demo_provider import DemoProvider
@@ -23,6 +24,50 @@ from tui.screens.graph_explorer import GraphExplorerScreen
 from tui.screens.splash import SplashScreen
 from tui.screens.threat_detection import ThreatDetectionScreen
 from tui.store import Store
+
+
+# Gold everywhere Textual would otherwise paint its default blue: table
+# cursors, scrollbars, focus borders, footer keys, checkboxes, selections.
+BITCRAFT_THEME = Theme(
+    name="bitcraft",
+    primary="#d4af37",
+    secondary="#ffa700",
+    accent="#ffd84d",
+    warning="#ff8c42",
+    error="#b3261e",
+    success="#d4af37",
+    foreground="#e6e6e6",
+    background="#000000",
+    surface="#050505",
+    panel="#0d0b08",
+    dark=True,
+    variables={
+        "block-cursor-background": "#d4af37",
+        "block-cursor-foreground": "#000000",
+        "block-cursor-text-style": "bold",
+        "block-cursor-blurred-background": "#d4af37 45%",
+        "block-cursor-blurred-foreground": "#000000",
+        "block-hover-background": "#d4af37 12%",
+        "scrollbar": "#d4af37 55%",
+        "scrollbar-hover": "#e8c55a",
+        "scrollbar-active": "#ffd84d",
+        "scrollbar-background": "#0d0b08",
+        "scrollbar-background-hover": "#0d0b08",
+        "scrollbar-background-active": "#0d0b08",
+        "scrollbar-corner-color": "#0d0b08",
+        "footer-key-foreground": "#d4af37",
+        "footer-foreground": "#7a7a7a",
+        "footer-background": "#000000",
+        "footer-description-foreground": "#9a9080",
+        "input-cursor-background": "#d4af37",
+        "input-cursor-foreground": "#000000",
+        "input-selection-background": "#d4af37 35%",
+        "screen-selection-background": "#d4af37 35%",
+        "border": "#d4af37",
+        "border-blurred": "#3a3020",
+        "link-color": "#ffd84d",
+    },
+)
 
 
 class BitCraftApp(App):
@@ -58,6 +103,21 @@ class BitCraftApp(App):
                 fast_boot=True,
             )
         self.store = store
+        self.register_theme(BITCRAFT_THEME)
+        self.theme = "bitcraft"
+
+    def clear_selection(self) -> None:
+        """Ignore the startup window where the mode stack is still empty.
+
+        Textual mounts the DEFAULT_MODE screen before registering its stack,
+        and with eager tasks the dashboard's filter Inputs run their selection
+        watcher (which calls this) inside that window. Textual only catches
+        NoScreen here, so a real `app.run()` crashed with ScreenStackError.
+        """
+        try:
+            super().clear_selection()
+        except ScreenStackError:
+            pass
 
     def on_mount(self) -> None:
         """Open on the brand splash above the default dashboard mode."""
