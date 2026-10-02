@@ -27,7 +27,6 @@ from tui.widgets.chart_panels import (
 from tui.widgets.charts import CHROME, MUTED, PINK, SALMON, TEXT, YELLOW, hbar
 from tui.widgets.graph_view import GraphView
 from tui.widgets.header_bar import HeaderBar
-from tui.widgets.mascot import NATIVE_WIDTH, Mascot
 from tui.widgets.panel_state import PanelState
 
 
@@ -54,7 +53,6 @@ class AlertDetailScreen(Screen):
                 yield GraphView(
                     self.elliptic_tx_id, clusters=4, id="detail-graph", classes="panel"
                 )
-                yield Mascot("happy", art_width=NATIVE_WIDTH, idle=True, id="detail-mascot")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -67,9 +65,8 @@ class AlertDetailScreen(Screen):
         self._fit()
 
     def _fit(self) -> None:
-        roomy = self.size.width >= 140 and self.size.height >= 40
-        self.query_one("#detail-mascot").display = roomy
-        self.query_one("#detail-side").styles.width = NATIVE_WIDTH + 2 if roomy else 44
+        wide = self.size.width >= 140
+        self.query_one("#detail-side").styles.width = 58 if wide else 44
         self.query_one("#detail-side").display = self.size.width >= 100
 
     def _load(self) -> None:

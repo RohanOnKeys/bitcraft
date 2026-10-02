@@ -1,7 +1,7 @@
 """Wallets screen: ranked wallet (address cluster) alerts and their evidence.
 
 Left: wallets ranked by risk. Right: why the selected wallet was flagged,
-its link graph (wallet -> transactions -> addresses / IPs) and the frog.
+and its link graph (wallet -> transactions -> addresses / IPs).
 Bottom: its riskiest transactions with IP:port, GeoIP country and ASN.
 """
 
@@ -19,11 +19,9 @@ from tui.widgets.chart_panels import score_gauge, severity_colour
 from tui.widgets.charts import CHROME, GOLD, MUTED, PINK, SALMON, TEXT, YELLOW, hbar
 from tui.widgets.graph_view import GraphView, network_from_link_graph
 from tui.widgets.header_bar import HeaderBar
-from tui.widgets.mascot import NATIVE_WIDTH, Mascot
 
 PAGE = 200
-MASCOT_MIN_WIDTH = 160
-MASCOT_MIN_HEIGHT = 48
+WIDE_SIDE_MIN_WIDTH = 150
 
 
 class WalletTable(DataTable):
@@ -67,7 +65,6 @@ class WalletsScreen(Screen):
                 with Vertical(id="wallet-side"):
                     yield Static("", id="wallet-detail", classes="panel")
                     yield GraphView(id="wallet-graph", classes="panel")
-                    yield Mascot("happy", art_width=NATIVE_WIDTH, idle=True, id="wallet-mascot")
             yield Static("", id="wallet-txs", classes="panel")
         yield Footer()
 
@@ -83,9 +80,8 @@ class WalletsScreen(Screen):
         self._fit()
 
     def _fit(self) -> None:
-        roomy = self.size.width >= MASCOT_MIN_WIDTH and self.size.height >= MASCOT_MIN_HEIGHT
-        self.query_one("#wallet-mascot").display = roomy
-        self.query_one("#wallet-side").styles.width = NATIVE_WIDTH + 4 if self.size.width >= 150 else 52
+        wide = self.size.width >= WIDE_SIDE_MIN_WIDTH
+        self.query_one("#wallet-side").styles.width = 60 if wide else 52
 
     def action_refresh(self) -> None:
         def work() -> None:
