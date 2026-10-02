@@ -15,7 +15,7 @@ You need Python 3.10 or newer.
 | Method | Command | Gives you |
 | --- | --- | --- |
 | pip | `pip install bitcraft` | The `bitcraft` command (TUI only) |
-| Chocolatey (Windows) | `choco install bitcraft` | The `bitcraft` command (TUI only) |
+| pipx (recommended) | `pipx install bitcraft` | The `bitcraft` command, isolated (TUI only) |
 | From source | `git clone https://github.com/RohanOnKeys/bitcraft` then `pip install -e .` | TUI plus the ML pipeline and API |
 
 To run the full system (pipeline, API and TUI) from source, also install
