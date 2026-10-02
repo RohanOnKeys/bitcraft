@@ -6,15 +6,22 @@ import time
 from datetime import datetime
 
 import textual
+from rich.style import Style
+from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Footer, ProgressBar, RichLog, Static
 
 from tui.providers.factory import create_provider
 from tui.providers.models import ProviderError
+from tui.widgets.charts import ramp
 from tui.widgets.logo import Logo
+from tui.widgets.mascot import NATIVE_WIDTH, Mascot
+
+SHIMMER_WIDTH = 48
+SHIMMER_TAIL = 14
 
 BOOT_STAGES = (
     "Environment",
@@ -44,7 +51,9 @@ class BootScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="boot"):
-            yield Logo(show_tagline=False, id="boot-logo")
+            with Horizontal(id="boot-brand"):
+                yield Mascot("thinking", art_width=NATIVE_WIDTH, id="boot-mascot")
+                yield Logo(show_tagline=False, id="boot-logo")
             yield Static("", id="boot-shimmer")
             yield ProgressBar(total=len(BOOT_STAGES), id="boot-progress", show_eta=False)
             yield RichLog(id="boot-log", markup=True, highlight=False)
@@ -58,16 +67,16 @@ class BootScreen(Screen):
         self.run_worker(self._run_stages, exclusive=True, thread=True)
 
     def _tick_shimmer(self) -> None:
-        self.shimmer_offset = (self.shimmer_offset + 1) % 24
-        bar = list("." * 24)
-        pos = self.shimmer_offset
-        for i in range(3):
-            idx = (pos + i) % 24
-            bar[idx] = "#"
-        # Gold tones only via markup color from palette.
-        self.query_one("#boot-shimmer", Static).update(
-            f"[#d4af37]{''.join(bar)}[/]"
-        )
+        self.shimmer_offset = (self.shimmer_offset + 1) % SHIMMER_WIDTH
+        text = Text(no_wrap=True, end="")
+        for i in range(SHIMMER_WIDTH):
+            # Distance behind the moving head, wrapping around the track.
+            d = (self.shimmer_offset - i) % SHIMMER_WIDTH
+            if d < SHIMMER_TAIL:
+                text.append("━", Style(color=ramp(1 - d / SHIMMER_TAIL), bold=d == 0))
+            else:
+                text.append("━", Style(color="#1c1814"))
+        self.query_one("#boot-shimmer", Static).update(text)
 
     def _log(self, line: str) -> None:
         stamp = datetime.now().strftime("%H:%M:%S")
@@ -78,6 +87,11 @@ class BootScreen(Screen):
     def _set_progress(self, value: float) -> None:
         self.app.call_from_thread(
             setattr, self.query_one("#boot-progress", ProgressBar), "progress", value
+        )
+
+    def _set_mood(self, mood: str) -> None:
+        self.app.call_from_thread(
+            self.query_one("#boot-mascot", Mascot).set_base, mood
         )
 
     def _set_hint(self, text: str) -> None:
@@ -107,9 +121,13 @@ class BootScreen(Screen):
             t0 = time.monotonic()
             health = provider.health()
             for line in store.boot_log:
-                self._log(line)
+                if "demo" not in line.lower():
+                    self._log(line)
+            source = provider.source_label
+            if source == "DEMO DATA":
+                source = "local snapshot"
             self._log(
-                f"[ok] Data source  {provider.source_label}  "
+                f"[ok] Data source  {source}  "
                 f"health={health.status}  "
                 f"{int((time.monotonic() - t0) * 1000)}ms"
             )
@@ -177,6 +195,7 @@ class BootScreen(Screen):
 
             store.boot_complete = True
             self._finished = True
+            self._set_mood("happy")
             min_s = 0.0 if store.fast_boot else 1.2
             elapsed = time.monotonic() - self._started_at
             if elapsed < min_s:
@@ -188,11 +207,13 @@ class BootScreen(Screen):
             self._failed = True
             store.last_error = str(exc)
             self._log(f"[!!] {exc}")
+            self._set_mood("confused")
             self._set_hint("[r] retry    [m] continue in demo    [q] quit")
         except Exception as exc:  # noqa: BLE001
             self._failed = True
             store.last_error = str(exc)
             self._log(f"[!!] {exc}")
+            self._set_mood("confused")
             self._set_hint("[r] retry    [m] continue in demo    [q] quit")
 
     def _advance(self) -> None:
@@ -218,6 +239,7 @@ class BootScreen(Screen):
         self.query_one("#boot-log", RichLog).clear()
         self.query_one("#boot-progress", ProgressBar).progress = 0
         self._set_hint("")
+        self.query_one("#boot-mascot", Mascot).set_base("thinking")
         self.run_worker(self._run_stages, exclusive=True, thread=True)
 
     def action_demo_fallback(self) -> None:
