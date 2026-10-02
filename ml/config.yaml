@@ -29,3 +29,19 @@ score_fusion:
 
 explainability:
   top_n_shap: 100
+
+# Challenge-format transaction/network metadata (ml/metadata_generator.py or
+# any CSV/JSON/XML in that shape). Skipped when the folder is missing.
+metadata:
+  dir: metadata            # under the datasets directory
+  txid_map: txid_map.csv
+  truth: generator_truth.csv
+  geoip_dir: datasets/geoip
+  entity_alerts: 500
+
+metadata_model:
+  max_iter: 200
+  learning_rate: 0.08
+  max_leaf_nodes: 31
+  cv_folds: 5
+  random_state: 42
