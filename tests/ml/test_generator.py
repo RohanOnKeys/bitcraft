@@ -8,13 +8,8 @@ import pytest
 from ml.addresses import SCRIPT_TYPES, base58check_valid, bech32_valid, make_address, script_type_of
 from ml.ingest import REQUIRED_FIELDS
 from ml.metadata_generator import generate
+from tests.ml.fixture_data import TEST_POOLS as POOLS
 from tests.ml.fixture_data import write_fixture_dataset
-
-# Fake GeoIP pools so tests need no database download.
-POOLS = {
-    "country": {cc: ["81.2.69.0/24"] for cc in ("US", "DE", "RU", "NL", "SG", "BR", "IN", "GB")},
-    "asn": {"60729": ["185.220.101.0/24"], "24940": ["88.198.0.0/16"]},
-}
 
 
 def test_known_addresses_validate() -> None:

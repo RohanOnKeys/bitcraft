@@ -13,10 +13,19 @@ import numpy as np
 import pandas as pd
 
 N_FEATURES = 165
+# Fake GeoIP pools so fixture metadata needs no database download.
+TEST_POOLS = {
+    "country": {cc: ["81.2.69.0/24"] for cc in ("US", "DE", "RU", "NL", "SG", "BR", "IN", "GB")},
+    "asn": {"60729": ["185.220.101.0/24"], "24940": ["88.198.0.0/16"]},
+}
 
 
-def write_fixture_dataset(out_dir: Path, n_tx: int = 2000, seed: int = 42) -> Path:
-    """Write the five contract CSVs into out_dir and return it."""
+def write_fixture_dataset(out_dir: Path, n_tx: int = 2000, seed: int = 42, metadata: bool = False) -> Path:
+    """Write the five contract CSVs into out_dir and return it.
+
+    metadata=True also writes the challenge-format metadata layer
+    (out_dir/metadata) with the generator, using TEST_POOLS for IPs.
+    """
     rng = np.random.default_rng(seed)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -114,4 +123,9 @@ def write_fixture_dataset(out_dir: Path, n_tx: int = 2000, seed: int = 42) -> Pa
     rel.insert(0, "relationship_id", [f"REL_{i:07d}" for i in range(len(rel))])
     rel["timestep"] = rng.integers(1, 50, len(rel))
     rel.to_csv(out_dir / "relationships.csv", index=False)
+    if metadata:
+        from ml.metadata_generator import generate, write_all
+
+        records, truth = generate(out_dir, pools=TEST_POOLS, seed=seed)
+        write_all(records, truth, out_dir / "metadata", formats=("csv",))
     return out_dir
