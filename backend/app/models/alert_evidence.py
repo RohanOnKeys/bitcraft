@@ -1,12 +1,11 @@
 """ORM model for the alert_evidence table.
 
-Populated by ml/explainability.py.
+Populated from ml/artifacts/evidence.parquet (ml/explainability.py).
 """
 
 from sqlalchemy import BigInteger, Column, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import JSONB
 
-from app.core.database import Base
+from app.core.database import Base, JsonType
 
 
 class AlertEvidence(Base):
@@ -17,5 +16,6 @@ class AlertEvidence(Base):
     elliptic_tx_id = Column(
         BigInteger, ForeignKey("alerts.elliptic_tx_id"), primary_key=True
     )
-    shap_reasons = Column(JSONB, nullable=True)
+    shap_reasons = Column(JsonType, nullable=True)
+    evidence_items = Column(JsonType, nullable=True)
     evidence_text = Column(Text, nullable=False)

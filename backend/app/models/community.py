@@ -1,6 +1,6 @@
 """ORM model for the communities table.
 
-Populated by ml/graph_builder.py.
+Populated from ml/artifacts/communities.parquet (ml/graph_builder.py).
 """
 
 from sqlalchemy import Column, Float, Integer
@@ -17,3 +17,4 @@ class Community(Base):
     size = Column(Integer, nullable=False)
     illicit_ratio = Column(Float, nullable=True)
     mean_pagerank = Column(Float, nullable=False)
+    alert_count = Column(Integer, nullable=False, default=0)
