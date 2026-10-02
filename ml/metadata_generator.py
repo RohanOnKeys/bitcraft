@@ -50,6 +50,8 @@ from ml.addresses import SCRIPT_TYPES, make_address
 DEFAULT_OUT = Path("datasets/metadata")
 KNOWN_RANGES = Path(__file__).resolve().parent / "reference" / "known_ranges.csv"
 
+# Owner counts at full size; smaller inputs scale down so owners still
+# transact repeatedly (about 5 licit / 15 illicit transactions per owner).
 N_LICIT_OWNERS = 9000
 N_ILLICIT_OWNERS = 120
 # Share of unlabeled transactions secretly routed through illicit owners.
@@ -176,11 +178,14 @@ def generate(
         owner.home_ips = [ips.in_country(home) for _ in range(rng.randint(1, 2))]
         return owner
 
-    licit = [make_owner(i, False) for i in range(N_LICIT_OWNERS)]
-    illicit = [make_owner(N_LICIT_OWNERS + i, True) for i in range(N_ILLICIT_OWNERS)]
+    n_illicit_tx = int((tx["class_label"].astype(str) == "1").sum())
+    n_licit_owners = max(20, min(N_LICIT_OWNERS, len(tx) // 5))
+    n_illicit_owners = max(3, min(N_ILLICIT_OWNERS, n_illicit_tx // 15))
+    licit = [make_owner(i, False) for i in range(n_licit_owners)]
+    illicit = [make_owner(n_licit_owners + i, True) for i in range(n_illicit_owners)]
     # Zipf-like activity: a few busy owners, a long tail of occasional ones.
-    licit_w = 1.0 / np.arange(1, N_LICIT_OWNERS + 1) ** 0.9
-    illicit_w = 1.0 / np.arange(1, N_ILLICIT_OWNERS + 1) ** 0.7
+    licit_w = 1.0 / np.arange(1, n_licit_owners + 1) ** 0.9
+    illicit_w = 1.0 / np.arange(1, n_illicit_owners + 1) ** 0.7
     licit_w /= licit_w.sum()
     illicit_w /= illicit_w.sum()
 
@@ -200,9 +205,9 @@ def generate(
         hidden = label not in ("1", "2") and rng.random() < HIDDEN_ILLICIT_SHARE
         is_illicit = label == "1" or hidden
         owner = (
-            illicit[int(nrng.choice(N_ILLICIT_OWNERS, p=illicit_w))]
+            illicit[int(nrng.choice(n_illicit_owners, p=illicit_w))]
             if is_illicit
-            else licit[int(nrng.choice(N_LICIT_OWNERS, p=licit_w))]
+            else licit[int(nrng.choice(n_licit_owners, p=licit_w))]
         )
         i = 0 if owner.illicit else 1
         fee = max(0.0, float(row.fee_btc))
@@ -220,14 +225,14 @@ def generate(
             if n_in >= 2 and rng.random() < COINJOIN[i]:
                 coinjoin = True
                 for k in range(0, n_in, 2):
-                    other = licit[rng.randrange(N_LICIT_OWNERS)]
+                    other = licit[rng.randrange(n_licit_owners)]
                     inputs[k] = address_of(other, 0.5)
         in_amounts = _split(total_in, len(inputs), nrng)
 
         round_payout = rng.random() < ROUND_PAYOUT[i]
         if peel:
             payment = round(total_out * rng.uniform(0.05, 0.15), 8)
-            pay_to = licit[rng.randrange(N_LICIT_OWNERS)]
+            pay_to = licit[rng.randrange(n_licit_owners)]
             change = new_address(owner)
             outputs = [address_of(pay_to, 0.3), change]
             out_amounts = [payment, round(total_out - payment, 8)]
@@ -235,7 +240,7 @@ def generate(
         else:
             has_change = n_out >= 2 and rng.random() < 0.7
             payees = n_out - 1 if has_change else n_out
-            outputs = [address_of(licit[rng.randrange(N_LICIT_OWNERS)], 0.3) for _ in range(payees)]
+            outputs = [address_of(licit[rng.randrange(n_licit_owners)], 0.3) for _ in range(payees)]
             out_amounts = _split(total_out, n_out, nrng)
             if has_change:
                 change = new_address(owner)
