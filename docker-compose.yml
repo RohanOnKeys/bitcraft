@@ -9,36 +9,50 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bitcraft"]
+      interval: 2s
+      retries: 30
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
 
+  # Offline ML run: reads datasets/*.csv, writes Parquet artifacts, exits.
   ml:
     build:
       context: .
       dockerfile: ml/Dockerfile
     depends_on:
-      - postgres
       - redis
     environment:
-      DATABASE_URL: postgresql://bitcraft:bitcraft@postgres:5432/bitcraft
       REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./datasets:/app/datasets:ro
+      - artifacts:/app/ml/artifacts
 
+  # Loads the artifacts into PostgreSQL, then serves the read-only API.
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     depends_on:
-      - postgres
-      - redis
-      - ml
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ml:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://bitcraft:bitcraft@postgres:5432/bitcraft
       REDIS_URL: redis://redis:6379/0
+      ARTIFACTS_DIR: /artifacts
+    volumes:
+      - artifacts:/artifacts:ro
     ports:
       - "8000:8000"
 
 volumes:
   postgres_data:
+  artifacts:
