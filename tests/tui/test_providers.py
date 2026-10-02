@@ -14,6 +14,7 @@ from tui.providers.demo_provider import (
     ALERT_COUNT,
     ANOMALY_WEIGHT,
     COMMUNITY_WEIGHT,
+    MODEL_WEIGHT,
     FULL_STACK_COVERAGE_PCT,
     LABELED_COVERAGE_PCT,
     NETWORK_COVERAGE_PCT,
@@ -76,7 +77,8 @@ def test_demo_ranks_monotonic_and_composite_weights() -> None:
     assert ranks == list(range(1, ALERT_COUNT + 1))
     for row in page.items[:50]:
         expected = (
-            ANOMALY_WEIGHT * row.anomaly_score
+            MODEL_WEIGHT * row.model_score
+            + ANOMALY_WEIGHT * row.anomaly_score
             + COMMUNITY_WEIGHT * row.community_risk
             + NETWORK_WEIGHT * row.network_signal
         )
@@ -110,8 +112,9 @@ def test_primary_driver_hand_built() -> None:
     assert primary_driver(1.0, 0.0, 0.0) == "ANOMALY"
     assert primary_driver(0.0, 1.0, 0.0) == "COMMUNITY"
     assert primary_driver(0.0, 0.0, 1.0) == "NETWORK"
-    # 0.60*0.5=0.30 vs 0.25*0.9=0.225 vs 0.15*1.0=0.15
-    assert primary_driver(0.5, 0.9, 1.0) == "ANOMALY"
+    assert primary_driver(0.0, 0.0, 0.0, model=1.0) == "MODEL"
+    # 0.65*0.4=0.26 vs 0.05*1.0 vs 0.20*0.9=0.18 vs 0.10*1.0
+    assert primary_driver(1.0, 0.9, 1.0, model=0.4) == "MODEL"
 
 
 def test_community_unlabeled_ratio_is_none() -> None:
@@ -293,6 +296,21 @@ async def test_dashboard_filter_min_score() -> None:
 
 
 @pytest.mark.asyncio
+async def test_dashboard_filter_ignores_malformed_min_score() -> None:
+    """A mistyped min score keeps the last good value instead of crashing."""
+    app = BitCraftApp(store=_store())
+    async with app.run_test(size=(140, 45)) as pilot:
+        await _boot_to_dashboard(app, pilot)
+        dash = app.screen
+        assert isinstance(dash, DashboardScreen)
+        dash.query_one("#filter-min-score").value = "0.45"
+        dash._apply_filters()
+        dash.query_one("#filter-min-score").value = "0.45x"
+        dash._apply_filters()
+        assert app.store.filters.min_score == 0.45
+
+
+@pytest.mark.asyncio
 async def test_dashboard_alert_rows_at_100x30() -> None:
     """At 100x30 the alert table shows a usable number of data rows."""
     app = BitCraftApp(store=_store())
@@ -318,6 +336,6 @@ async def test_threat_queue_order_and_caveat() -> None:
         screen._render_coverage()
         widget = screen.query_one("#threat-coverage", Static)
         plain = str(widget.render())
-        assert "coverage blind spots" in plain
+        assert widget.border_title == "coverage blind spots"
         if any(not r.has_network_layer for r in screen._queue):
             assert CAVEAT in plain
