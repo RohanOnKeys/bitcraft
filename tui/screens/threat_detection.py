@@ -28,13 +28,11 @@ from tui.widgets.charts import (
     hbar,
 )
 from tui.widgets.header_bar import HeaderBar
-from tui.widgets.mascot import NATIVE_WIDTH, Mascot
 from tui.widgets.stacked_bar import StackedBar
 
 CAVEAT = "No network evidence is not the same as low risk"
-# Room needed before the side column widens to hold the full-size frog.
-MASCOT_MIN_WIDTH = 150
-MASCOT_MIN_HEIGHT = 42
+# Terminal width at which the drivers column widens.
+WIDE_SIDE_MIN_WIDTH = 150
 
 
 class ThreatDetectionScreen(Screen):
@@ -71,9 +69,6 @@ class ThreatDetectionScreen(Screen):
                 yield Static("", id="threat-queue", classes="panel")
                 with Vertical(id="threat-side"):
                     yield Static("", id="threat-drivers", classes="panel")
-                    yield Mascot(
-                        "happy", art_width=NATIVE_WIDTH, idle=True, id="threat-mascot"
-                    )
                 yield CommunityTable(id="threat-communities", classes="panel")
             with Horizontal(id="threat-bottom"):
                 yield Static("", id="threat-signals", classes="panel")
@@ -82,19 +77,15 @@ class ThreatDetectionScreen(Screen):
         yield Footer()
 
     def on_mount(self) -> None:
-        self._fit_mascot()
+        self._fit()
         self.refresh_view()
 
     def on_resize(self, event) -> None:  # type: ignore[no-untyped-def]
-        self._fit_mascot()
+        self._fit()
 
-    def _fit_mascot(self) -> None:
-        roomy = (
-            self.size.width >= MASCOT_MIN_WIDTH
-            and self.size.height >= MASCOT_MIN_HEIGHT
-        )
-        self.query_one("#threat-mascot").display = roomy
-        self.query_one("#threat-side").styles.width = NATIVE_WIDTH + 2 if roomy else 34
+    def _fit(self) -> None:
+        wide = self.size.width >= WIDE_SIDE_MIN_WIDTH
+        self.query_one("#threat-side").styles.width = 48 if wide else 34
 
     def on_screen_resume(self) -> None:
         """Reload when switching back to the threats mode."""
@@ -119,7 +110,6 @@ class ThreatDetectionScreen(Screen):
         self._render_signals()
         self._render_coverage()
         self._render_timeline()
-        self._update_mascot()
 
     def _apply_local_filters(self) -> None:
         rows = list(self._queue)
@@ -253,10 +243,6 @@ class ThreatDetectionScreen(Screen):
             return None
         return self._queue[self._cursor]
 
-    def _update_mascot(self) -> None:
-        """Hop when the selection moves; the frog stays on its idle cycle."""
-        self.query_one("#threat-mascot", Mascot).hop()
-
     def _render_signals(self) -> None:
         row = self._selected()
         panel = self.query_one("#threat-signals", Static)
@@ -366,14 +352,12 @@ class ThreatDetectionScreen(Screen):
                 self._cursor = min(len(self._queue) - 1, self._cursor + 1)
                 self._render_queue()
                 self._render_signals()
-                self._update_mascot()
                 event.stop()
         elif event.key in {"up", "k"}:
             if self._queue:
                 self._cursor = max(0, self._cursor - 1)
                 self._render_queue()
                 self._render_signals()
-                self._update_mascot()
                 event.stop()
 
     def action_open_detail(self) -> None:
