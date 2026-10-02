@@ -1,3 +1,5 @@
+![BitCraft](docs/images/splash.png)
+
 # BitCraft
 
 AI Powered Monitoring & Analysis of Bitcoin Transaction Traffic Software
@@ -7,12 +9,6 @@ BitCraft is an offline Bitcoin intelligence platform that correlates blockchain 
 The project is designed for Linux and operates entirely offline on synthetic datasets modeled after real Bitcoin transaction and P2P network activity.
 
 ---
-
-![BitCraft dashboard](docs/images/dashboard.png)
-
-| Wallets | Graph explorer |
-| --- | --- |
-| ![Wallets](docs/images/wallets.png) | ![Graph explorer](docs/images/graph.png) |
 
 ## Background
 
@@ -33,11 +29,15 @@ BitCraft addresses this challenge by combining blockchain layer data with networ
 - Terminal-based investigation dashboard (TUI) for link analysis
 - Fully offline Linux compatible workflow
 
+![Dashboard: KPIs, filters, ranked alerts and a live preview of the selected alert](docs/images/dashboard.png)
+
 ---
 
 ## Dataset
 
 BitCraft works with synthetic datasets modeled on real Bitcoin transaction fields.
+
+![Wallets: address clusters with their IPs, ports, GeoIP country and ASN](docs/images/wallets.png)
 
 ### Supported Fields
 
@@ -69,6 +69,8 @@ GeoIP enrichment uses downloadable open source GeoIP databases.
 - Generate explainable alerts with confidence scores.
 - Provide investigators with a clear view of suspicious entities through a terminal-based dashboard.
 
+![Threats: posture, top-25 queue with drivers, riskiest communities and coverage gaps](docs/images/threats.png)
+
 ---
 
 ## AI and Graph Analysis
@@ -85,6 +87,8 @@ Planned capabilities include:
 - Network correlation between blockchain activity and observed IP metadata
 
 Every alert includes supporting evidence and a confidence score.
+
+![Graph explorer: live connectivity graph with timestep, severity, driver and community charts](docs/images/graph.png)
 
 ---
 
@@ -111,6 +115,8 @@ pip install bitcraft          # any OS, Python 3.10+
 choco install bitcraft        # Windows (Chocolatey)
 bitcraft                      # opens BitCraft in a new, large terminal window
 ```
+
+![Boot: data source, pipeline and alert checks while BitCraft starts](docs/images/boot.png)
 
 From a clone, `pip install -e .` gives you the same `bitcraft` command, or
 run `bitcraft.bat` / `./bitcraft.sh` / `./bitcraft.ps1` straight from the repo
@@ -199,6 +205,8 @@ BitCraft produces:
 - Ranked suspicious wallets and transactions
 - Explainable AI generated alerts
 - Terminal-based investigation dashboard (TUI)
+
+![Alert detail: composite score, drivers, network and blockchain metadata, evidence and SHAP reasons](docs/images/detail.png)
 
 ---
 
