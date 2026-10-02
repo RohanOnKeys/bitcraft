@@ -26,13 +26,11 @@ from tui.widgets.filter_panel import FilterPanel
 from tui.widgets.header_bar import HeaderBar
 from tui.widgets.kpi_summary import KpiSummary
 from tui.widgets.graph_view import GraphView
-from tui.widgets.mascot import NATIVE_WIDTH, Mascot
 from tui.widgets.panel_state import PanelState
 
 
-# Room needed before the preview column widens to hold the full-size frog.
-MASCOT_MIN_WIDTH = 160
-MASCOT_MIN_HEIGHT = 46
+# Terminal width at which the preview column widens for bigger charts.
+WIDE_PREVIEW_MIN_WIDTH = 160
 
 
 class DashboardScreen(Screen):
@@ -71,9 +69,6 @@ class DashboardScreen(Screen):
                 with Vertical(id="preview-col"):
                     yield Static("", id="preview-pane", classes="panel")
                     yield GraphView(clusters=3, labels=False, id="preview-graph", classes="panel")
-                    yield Mascot(
-                        "happy", art_width=NATIVE_WIDTH, idle=True, id="dashboard-mascot"
-                    )
         yield Footer()
 
     def on_mount(self) -> None:
@@ -103,10 +98,10 @@ class DashboardScreen(Screen):
         self.query_one("#kpi-summary").display = not small
         self.query_one("#dashboard-body").display = not small
         wide = self.size.width >= 120
-        roomy = self.size.width >= MASCOT_MIN_WIDTH and self.size.height >= MASCOT_MIN_HEIGHT
         self.query_one("#preview-col").display = wide and not small
-        self.query_one("#preview-col").styles.width = NATIVE_WIDTH + 2 if roomy else 36
-        self.query_one("#dashboard-mascot").display = roomy
+        self.query_one("#preview-col").styles.width = (
+            58 if self.size.width >= WIDE_PREVIEW_MIN_WIDTH else 36
+        )
 
     def _refresh_all(self) -> None:
         self.query_one("#kpi-summary", KpiSummary).refresh_from_store()
@@ -163,13 +158,11 @@ class DashboardScreen(Screen):
         if row is None and store.alert_page and store.alert_page.items:
             row = store.alert_page.items[0]
             store.select_tx(row.elliptic_tx_id)
-        mascot = self.query_one("#dashboard-mascot", Mascot)
         graph = self.query_one("#preview-graph", GraphView)
         if row is None:
             preview.update("(no selection)")
             return
         tier = row.severity or severity_for_score(row.composite_score)
-        mascot.hop()
         graph.set_focus_tx(row.elliptic_tx_id)
         graph.border_title = f"neighbourhood · tx {row.elliptic_tx_id}"
         wm = MODEL_WEIGHT * (row.model_score or 0.0)
