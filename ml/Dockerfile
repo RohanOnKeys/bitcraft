@@ -7,5 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ml/ ./ml/
 
-# datasets/ is mounted read-only by docker-compose; artifacts go to a volume.
-CMD ["python", "-m", "ml.pipeline", "--datasets", "datasets", "--output", "ml/artifacts"]
+# datasets/ is mounted from the host by docker-compose; artifacts go to a
+# volume. Missing datasets are fetched from the GitHub release (SHA-256
+# verified) on the first run; files already present are never downloaded.
+CMD ["sh", "-c", "python -m ml.dataset download && exec python -m ml.pipeline --datasets datasets --output ml/artifacts"]
