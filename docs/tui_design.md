@@ -1,7 +1,9 @@
 # BitCraft TUI Design
 
-Status: demo-backed shell through threat detection. Graph canvas and
-analyst tooling still pending.
+Status: complete. Splash, boot, dashboard, threats, graph explorer,
+wallets and alert detail all read the live API, with built-in demo data
+as the fallback. Navigation and data flow diagrams are in
+`docs/architecture.md`.
 
 ## Why a Terminal Interface
 
@@ -29,28 +31,36 @@ Textual (Python). Floor: `textual>=5.0` for `App.MODES` / `switch_mode`.
 
 ## Mascot
 
-A gold pixel frog (`tui/widgets/mascot.py`, art in `tui/assets/mascots/`),
-drawn with half-block characters and downsampled by Pillow at runtime.
+A gold pixel frog (`bitcraft/widgets/mascot.py`, art in
+`bitcraft/assets/mascots/`), drawn with half-block characters at its
+native 56-column width. It appears only on the splash and boot screens;
+data pages stay free of decoration.
 
 | Mood | When |
 |---|---|
-| happy | Resting default (splash, dashboard, threats) |
-| thinking | Boot stages loading |
-| panic | A critical alert is selected (dashboard, threats) |
-| confused | Boot failed |
-| neutral, sleepy, confused, shocked, angry | Idle cycle: flashed for 3s every ~9s while resting on happy |
+| happy | Splash, and boot once every check passes |
+| thinking | Boot checks running |
+| confused | Boot failed (API unreachable or pipeline not run) |
+| neutral, sleepy, shocked, angry | Splash idle cycle |
 
-It hops by one or two pixel rows every ~2.6s and on each mood change
-(panic hops faster, sleepy stays still). Headroom is reserved, so hops
-never move the surrounding layout. On threats it hides under 40 rows.
+On the splash it hides when the terminal is under 34 rows.
 
 ## Provider layer
 
-Screens read only from `tui/store.py`. The store holds a `DataProvider`:
+Screens read only from `bitcraft/store.py`. The store holds a
+`DataProvider` (`bitcraft/providers/`):
 
-- `DemoProvider` - deterministic seed 42, plan-aligned coverage numbers
-- `ApiProvider` - FastAPI via `tui/api_client.py`
+- `DemoProvider`: deterministic seed 42, plan-aligned coverage numbers
+- `ApiProvider`: FastAPI via `bitcraft/api_client.py`
 - Selection: `BITCRAFT_DATA_SOURCE=auto|demo|api`, or `--demo` / `--api`
+
+```mermaid
+flowchart LR
+    S["Screens"] --> ST["store.py"]
+    ST --> F{"factory<br/>auto / demo / api"}
+    F -- "api, or auto with /health OK" --> AP["ApiProvider"] --> API["FastAPI"]
+    F -- "demo, or auto on failure" --> DP["DemoProvider<br/>seed 42"]
+```
 
 `auto` probes `/health` (1.5s) and falls back to demo on failure.
 
@@ -60,7 +70,9 @@ Screens read only from `tui/store.py`. The store holds a `DataProvider`:
 - `n/a` = no network coverage (never show `0` / `0.00` as risk)
 - `DEMO DATA` badge in the header whenever the demo provider is active
 
-## Severity (display-only)
+## Severity
+
+Set by `ml/ranker.py` (`SEVERITY_THRESHOLDS`) and shown as is:
 
 | Tier | Composite score |
 |---|---|
@@ -73,12 +85,13 @@ Screens read only from `tui/store.py`. The store holds a `DataProvider`:
 
 | Screen | Key | Role |
 |---|---|---|
-| Splash | launch | ASCII logo |
-| Boot | after Enter | Real provider stages, then dashboard |
-| Dashboard | `d` | KPIs, filters, alerts, preview |
-| Threats | `t` | Posture, queue, drivers, communities |
-| Graph | `g` | Placeholder explorer (canvas later) |
-| Alert detail | Enter on row | Scores, evidence, SHAP |
+| Splash | launch | Logo and frog |
+| Boot | after Enter | Data source, pipeline and alert checks, then dashboard |
+| Dashboard | `d` | KPIs, filters, ranked alerts, live preview |
+| Threats | `t` | Posture, top-25 queue with drivers, riskiest communities, coverage gaps |
+| Graph | `g` | Braille connectivity graph with timestep, severity, driver and community charts |
+| Wallets | `w` | Address clusters with their IPs, ports, GeoIP country and ASN, link graph |
+| Alert detail | Enter on an alert | Composite score, drivers, network and blockchain metadata, evidence, SHAP |
 
 ## Key map
 
@@ -87,24 +100,26 @@ Screens read only from `tui/store.py`. The store holds a `DataProvider`:
 | Enter | Splash: boot; table: detail |
 | d | Dashboard |
 | t | Threats |
-| g | Graph |
-| Esc | Home (splash) |
+| g | Graph (from an alert: its neighbourhood) |
+| w | Wallets |
+| Esc | Detail: back; pages: home (splash) |
 | q | Quit |
 | n / p | Next / previous alert page |
 | s | Cycle sort |
 | f / x | Focus filters / reset |
 | r | Refresh |
-| a / c / n | Threat driver filters |
-| w | Threat network-evidence toggle |
+| a / c / n | Threats: driver filters |
+| 1 / 2 / 3 / 4 | Threats: all, critical, high, medium |
 
 ## Run
 
 ```text
-pip install -r tui/requirements.txt
-python -m tui.app --demo
-python -m tui.app --api
-python -m tui.app
+pip install bitcraft
+bitcraft demo          # new sized window, demo data
+bitcraft               # new window, API with demo fallback
+bitcraft here --api    # current terminal, API required
 ```
 
-Minimum terminal size: 100x30. Below that a guard panel is shown.
+Minimum terminal size: 100x30, below which a guard panel is shown;
+160x46 or larger shows every panel at full width.
 `BITCRAFT_ASCII=1` forces plain ASCII glyphs.

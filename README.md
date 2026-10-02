@@ -150,6 +150,7 @@ Every alert shows its composite score, the weighted drivers behind it, the corre
 | Document | Contents |
 | --- | --- |
 | [User manual](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/user_manual.md) | Install, data, pipeline, API, TUI, offline deployment, troubleshooting |
+| [Architecture](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/architecture.md) | Diagrams: system, pipeline stages, score fusion, data relationships, database, entity graph |
 | [Technical writeup](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/technical_writeup.md) | Approach, model choice, explainability and results |
 | [Model card](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/model_card.md) | Models, evaluation protocol, metrics and limitations |
 | [Dataset provenance](https://github.com/RohanOnKeys/bitcraft/blob/main/docs/dataset_provenance.md) | What is real, what is synthetic, GeoIP attribution |
