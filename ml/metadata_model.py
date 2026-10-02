@@ -7,9 +7,11 @@ linked Elliptic transaction (txid -> synthetic id -> elliptic_tx_id), under
 the same label window and out-of-fold scoring as the main risk model.
 
 Wallet alerts rank clustered entities by
-    entity_risk = 0.6 * max(tx scores) + 0.4 * mean(tx scores)
-with provenance-tagged evidence and SHAP reasons from the riskiest
-transaction.
+    entity_risk = 0.6 * max(tx scores) + 0.4 * shrunk_mean(tx scores)
+where shrunk_mean = (sum + PRIOR_WEIGHT * PRIOR) / (n + PRIOR_WEIGHT) pulls
+wallets with little activity toward the base rate, so a sustained pattern
+across many transactions outranks a single risky one. Each alert carries
+provenance-tagged evidence and SHAP reasons from its riskiest transaction.
 """
 
 from __future__ import annotations
@@ -28,6 +30,9 @@ from ml.ingest import ingest
 from ml.ranker import severity_for_score
 
 MODELED = "modeled"
+# Shrinkage of a wallet's mean score toward the base rate (see module doc).
+PRIOR = 0.05
+PRIOR_WEIGHT = 1.0
 
 
 @dataclass
@@ -150,10 +155,11 @@ def run(
     tx["metadata_score"] = tx["txid"].map(dict(zip(tx_scores["txid"], tx_scores["metadata_score"])))
 
     # Wallet entities: blend of their riskiest and typical transaction.
-    agg = tx.groupby("entity_id")["metadata_score"].agg(["max", "mean"])
+    agg = tx.groupby("entity_id")["metadata_score"].agg(["max", "sum", "count"])
     entities = graph.entities.set_index("entity_id").join(agg)
-    entities["risk_score"] = (0.6 * entities["max"] + 0.4 * entities["mean"]).clip(0, 1)
-    entities = entities.drop(columns=["max", "mean"]).sort_values(
+    shrunk = (entities["sum"] + PRIOR_WEIGHT * PRIOR) / (entities["count"] + PRIOR_WEIGHT)
+    entities["risk_score"] = (0.6 * entities["max"] + 0.4 * shrunk).clip(0, 1)
+    entities = entities.drop(columns=["max", "sum", "count"]).sort_values(
         ["risk_score", "n_txs"], ascending=[False, False], kind="mergesort"
     )
     entities["rank"] = np.arange(1, len(entities) + 1)
