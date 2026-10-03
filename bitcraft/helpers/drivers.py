@@ -1,18 +1,18 @@
 """Primary driver tags from weighted score contributions.
 
-Weights mirrored from ml/config.yaml (plans/plan.md section 7).
+The weights mirror score_fusion in ml/config.yaml, so the TUI can split a
+composite score into its four parts; tests/tui/test_chart.py fails if the
+two ever differ.
 """
 
 from __future__ import annotations
 
 from typing import Literal
 
-from bitcraft.providers.demo_provider import (
-    ANOMALY_WEIGHT,
-    COMMUNITY_WEIGHT,
-    MODEL_WEIGHT,
-    NETWORK_WEIGHT,
-)
+MODEL_WEIGHT = 0.65
+ANOMALY_WEIGHT = 0.05
+COMMUNITY_WEIGHT = 0.20
+NETWORK_WEIGHT = 0.10
 
 DriverTag = Literal["MODEL", "ANOMALY", "COMMUNITY", "NETWORK"]
 

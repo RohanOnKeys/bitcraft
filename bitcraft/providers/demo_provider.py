@@ -10,6 +10,12 @@ import random
 import time
 from typing import Optional
 
+from bitcraft.helpers.drivers import (  # noqa: F401  (re-exported for tests)
+    ANOMALY_WEIGHT,
+    COMMUNITY_WEIGHT,
+    MODEL_WEIGHT,
+    NETWORK_WEIGHT,
+)
 from bitcraft.helpers.severity import severity_for_score
 from bitcraft.providers.models import (
     AlertDetail,
@@ -39,10 +45,6 @@ from bitcraft.providers.models import (
 )
 
 # Mirrored from ml/config.yaml score_fusion.
-MODEL_WEIGHT = 0.65
-ANOMALY_WEIGHT = 0.05
-COMMUNITY_WEIGHT = 0.20
-NETWORK_WEIGHT = 0.10
 
 TOTAL_TRANSACTIONS = 203_769
 LABELED_COVERAGE_PCT = 22.9
