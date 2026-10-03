@@ -87,9 +87,9 @@ Set by `ml/ranker.py` (`SEVERITY_THRESHOLDS`) and shown as is:
 |---|---|---|
 | Splash | launch | Logo and frog |
 | Boot | after Enter | Data source, pipeline and alert checks, then dashboard |
-| Dashboard | `d` | KPIs, filters, ranked alerts, live preview |
+| Dashboard | `d` | KPIs with per-timestep sparklines, filters, ranked alerts, triage marks, live preview |
 | Threats | `t` | Posture, top-25 queue with drivers, riskiest communities, coverage gaps |
-| Graph | `g` | Braille connectivity graph with timestep, severity, driver and community charts |
+| Graph | `g` | Braille connectivity graph; timestep, severity, driver and community charts; BTC volume, suspicious traffic by country, degree distribution |
 | Wallets | `w` | Address clusters with their IPs, ports, GeoIP country and ASN, link graph |
 | Alert detail | Enter on an alert | Composite score, drivers, network and blockchain metadata, evidence, SHAP |
 
@@ -108,6 +108,7 @@ Set by `ml/ranker.py` (`SEVERITY_THRESHOLDS`) and shown as is:
 | s | Cycle sort |
 | f / x | Focus filters / reset |
 | r | Refresh |
+| m | Dashboard: cycle triage mark (reviewed, escalate, dismiss) |
 | a / c / n | Threats: driver filters |
 | 1 / 2 / 3 / 4 | Threats: all, critical, high, medium |
 

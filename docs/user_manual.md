@@ -236,17 +236,19 @@ demo data. `--demo` and `--api` force one or the other.
 | `Ctrl+P` | Command palette |
 
 Dashboard only: `f` focuses the filters, `x` resets them, `n` / `p` page
-through alerts, `s` cycles the sort order.
+through alerts, `s` cycles the sort order, `m` marks the selected alert
+reviewed, escalate or dismiss (shown as R, E or D in the triage column;
+press again to cycle, marks last for the session).
 
 Threats only: `1` to `4` show all / critical / high / medium alerts, `a` /
-`c` / `n` filter by the main driver (anomaly, community, network), `w`
-toggles "network evidence required".
+`c` / `n` filter by the main driver (anomaly, community, network).
 
 ### 6.3 Screens
 
-**Dashboard.** KPI tiles across the top. On the left are filters (minimum
-score, community id, severity list, network and synthetic coverage) and
-the score histogram. The ranked alert table is in the middle. On the right
+**Dashboard.** KPI tiles across the top, each with a sparkline of that
+measure per timestep (the pipeline tile shows seconds per stage). On the
+left are filters (minimum score, community id, severity list, network and
+synthetic coverage) and a histogram of the scores on the current page. The ranked alert table is in the middle. On the right
 is a preview of the selected alert: composite score, weighted drivers, and
 its transaction neighbourhood.
 
@@ -258,8 +260,11 @@ coverage gaps, and alerts per timestep.
 **Graph explorer.** An animated connectivity view of the selected
 transaction's neighbourhood: the focus pulses in the middle, linked
 communities orbit it, and dots show flow along edges. Around it: graph
-stats, score drivers, alerts per timestep, severity mix and riskiest
-communities.
+stats with per-timestep sparklines, score drivers, alerts per timestep,
+severity mix and riskiest communities. Along the bottom: BTC volume per
+timestep (all transactions vs alerted ones), suspicious traffic by source
+country and timestep (metadata score 0.5 or higher), and the transaction
+graph's degree distribution on a log scale.
 
 **Wallets.** Wallets (address clusters) ranked by risk. For the selected
 wallet you see why it was flagged, a link graph (wallet → transactions →

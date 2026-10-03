@@ -346,7 +346,7 @@ sequenceDiagram
 API routes: `/alerts`, `/alerts/{tx_id}`, `/graph/{tx_id}`,
 `/communities`, `/communities/{id}`, `/entities`, `/entities/{id}`,
 `/entities/{id}/graph`, `/addresses/{address}`, `/ips/{ip}`,
-`/metadata/{tx_id}`, `/stats/summary`, `/threats/overview`,
+`/metadata/{tx_id}`, `/stats/summary`, `/stats/charts`, `/threats/overview`,
 `/pipeline/status`, `/pipeline/metrics`. Interactive docs at `/docs`.
 
 ## Terminal interface
