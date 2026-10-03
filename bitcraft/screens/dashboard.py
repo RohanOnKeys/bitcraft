@@ -43,6 +43,7 @@ class DashboardScreen(Screen):
         ("p", "prev_page", "Prev"),
         ("s", "cycle_sort", "Sort"),
         ("r", "refresh", "Refresh"),
+        ("m", "mark", "Mark"),
         ("enter", "open_detail", "Detail"),
     ]
 
@@ -135,7 +136,7 @@ class DashboardScreen(Screen):
     def _update_histogram(self) -> None:
         page = self.app.store.alert_page
         hist = self.query_one("#score-histogram", Static)
-        hist.border_title = "score histogram"
+        hist.border_title = "scores · this page"
         if page is None or not page.items:
             hist.update("(no data)")
             return
@@ -294,6 +295,16 @@ class DashboardScreen(Screen):
     def action_refresh(self) -> None:
         self._reload_alerts()
         self.query_one("#kpi-summary", KpiSummary).refresh_from_store()
+
+    def action_mark(self) -> None:
+        """Cycle the highlighted alert's triage mark: reviewed, escalate,
+        dismiss, unmarked. Marks last for the session."""
+        tx_id = self.app.store.selected_tx_id
+        if tx_id is None:
+            return
+        status = self.app.store.cycle_triage(tx_id)
+        self.query_one(AlertList).show_triage(tx_id)
+        self.notify(f"tx {tx_id}: {status}", timeout=2)
 
     def action_open_detail(self) -> None:
         tx_id = self.app.store.selected_tx_id

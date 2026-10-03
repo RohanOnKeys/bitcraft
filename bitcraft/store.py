@@ -51,9 +51,13 @@ class FilterState:
         )
 
 
+# Order the dashboard's `m` key cycles through.
+TRIAGE_CYCLE = ("unmarked", "reviewed", "escalate", "dismiss")
+
+
 @dataclass
 class TriageMark:
-    """Local-only triage state for one transaction."""
+    """Analyst triage state for one transaction, kept for this session."""
 
     status: str = "unmarked"  # unmarked | reviewed | escalate | dismiss
     note: str = ""
@@ -87,6 +91,12 @@ class Store:
     def select_tx(self, tx_id: Optional[int]) -> None:
         """Remember the highlighted / opened transaction."""
         self.selected_tx_id = tx_id
+
+    def cycle_triage(self, tx_id: int) -> str:
+        """Advance one transaction's triage mark and return the new status."""
+        mark = self.triage.setdefault(tx_id, TriageMark())
+        mark.status = TRIAGE_CYCLE[(TRIAGE_CYCLE.index(mark.status) + 1) % len(TRIAGE_CYCLE)]
+        return mark.status
 
     def set_alert_page(self, page: AlertPage) -> None:
         """Cache the current alert page."""
