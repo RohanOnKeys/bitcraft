@@ -11,6 +11,7 @@ from bitcraft.providers.models import (
     AlertSummary,
     CommunitySummary,
     PipelineStatus,
+    StatsCharts,
     StatsSummary,
     ThreatOverview,
 )
@@ -67,6 +68,7 @@ class Store:
     stats: Optional[StatsSummary] = None
     pipeline: Optional[PipelineStatus] = None
     threat_overview: Optional[ThreatOverview] = None
+    charts: Optional[StatsCharts] = None
     communities: list[CommunitySummary] = field(default_factory=list)
     alert_page: Optional[AlertPage] = None
     filters: FilterState = field(default_factory=FilterState)

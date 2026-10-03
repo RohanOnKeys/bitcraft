@@ -394,6 +394,7 @@ class ThreatDetectionScreen(Screen):
         try:
             self.app.store.threat_overview = self.app.store.provider.threat_overview()
             self.app.store.communities = self.app.store.provider.top_communities(25)
+            self.app.store.charts = self.app.store.provider.stats_charts()
         except ProviderError:
             pass
         self.refresh_view()

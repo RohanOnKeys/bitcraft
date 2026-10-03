@@ -13,6 +13,7 @@ from bitcraft.providers.models import (
     Health,
     LinkGraph,
     PipelineStatus,
+    StatsCharts,
     StatsSummary,
     Subgraph,
     ThreatOverview,
@@ -39,6 +40,10 @@ class DataProvider(Protocol):
 
     def stats_summary(self) -> StatsSummary:
         """Dashboard KPIs."""
+        ...
+
+    def stats_charts(self) -> StatsCharts:
+        """Series behind the sparklines and graph explorer charts."""
         ...
 
     def alerts(self, query: AlertQuery) -> AlertPage:

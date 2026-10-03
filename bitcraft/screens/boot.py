@@ -185,6 +185,7 @@ class BootScreen(Screen):
             self._log("[..] Threat overview")
             t0 = time.monotonic()
             store.threat_overview = provider.threat_overview()
+            store.charts = provider.stats_charts()
             self._log(
                 f"[ok] Threat overview  "
                 f"critical={store.threat_overview.critical_count}  "
