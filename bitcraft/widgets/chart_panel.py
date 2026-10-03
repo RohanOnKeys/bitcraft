@@ -1,18 +1,20 @@
 """Chart panel widgets that size themselves to their container.
 
-Each panel renders from stub series (bitcraft/helpers/stub_chart.py) and
-redraws on resize; a few carry a gentle animation so the screen feels live.
+Each panel renders the series the screen hands it (from GET /stats/charts,
+/threats/overview and /communities) and redraws on resize; a few carry a
+gentle animation so the screen feels live. With no data a panel says so
+instead of drawing anything.
 """
 
 from __future__ import annotations
 
+import math
 from typing import Sequence
 
 from rich.style import Style
 from rich.text import Text
 from textual.widget import Widget
 
-from bitcraft.helpers import stub_chart
 from bitcraft.widgets.chart import (
     CHROME,
     CRIMSON,
@@ -38,6 +40,11 @@ from bitcraft.widgets.chart import (
 )
 
 
+def no_data(message: str = "no data") -> Text:
+    """Muted placeholder line for a panel whose series is empty."""
+    return Text(message, style=Style(color=MUTED, italic=True))
+
+
 class _Animated(Widget):
     """Widget that redraws on a timer and exposes a frame counter."""
 
@@ -60,12 +67,14 @@ class TimestepChart(_Animated):
 
     def __init__(self, series: Sequence[float] | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.series = list(series or stub_chart.alerts_by_timestep())
+        self.series = list(series or [])
 
     def render(self) -> Text:
         w, h = self.size.width, self.size.height
         if w < 12 or h < 4:
             return Text("")
+        if not self.series:
+            return no_data()
         axis_w = 5
         plot_w = w - axis_w
         chart_h = h - 2
@@ -131,6 +140,8 @@ class DonutChart(_Animated):
         w, h = self.size.width, self.size.height
         if w < 10 or h < 4:
             return Text("")
+        if not self.segments:
+            return no_data()
         legend_rows = len(self.segments)
         side = w >= 34
         ring_rows = h if side else max(4, h - legend_rows)
@@ -180,12 +191,14 @@ class CommunityBars(_Animated):
 
     def __init__(self, rows: Sequence[tuple[str, float, int]] | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.rows = list(rows or stub_chart.community_risk_bars())
+        self.rows = list(rows or [])
 
     def render(self) -> Text:
         w, h = self.size.width, self.size.height
         if w < 16:
             return Text("")
+        if not self.rows:
+            return no_data()
         grow = min(1.0, self.frame / 25)
         bar_w = max(4, w - 17)
         out = Text(no_wrap=True, end="")
@@ -204,63 +217,75 @@ class CommunityBars(_Animated):
 
 
 class HeatmapChart(Widget):
-    """Weekday x hour activity heatmap with hour ticks and a scale."""
+    """Rows x timesteps heatmap: suspicious transactions per source country.
+
+    Two rows share one text line (upper half block), so each line is
+    labelled with both row names.
+    """
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.matrix = stub_chart.activity_heatmap()
+        self.rows: list[str] = []
+        self.matrix: list[list[float]] = []
 
     def render(self) -> Text:
         w, h = self.size.width, self.size.height
         if w < 20 or h < 4:
             return Text("")
-        hours = len(self.matrix[0])
-        cell_w = max(1, (w - 4) // hours)
-        rows = min(len(self.matrix), (h - 2) * 2)
-        body = heatmap(self.matrix[:rows], cell_w=cell_w).split("\n")
-        days = ["Mo", "We", "Fr", "Su", "Tu", "Th", "Sa"]
+        if not self.matrix:
+            return no_data("no metadata loaded")
+        label_w = 6
+        cols = len(self.matrix[0])
+        cell_w = max(1, (w - label_w) // cols)
+        n_rows = min(len(self.matrix), (h - 2) * 2)
+        body = heatmap(self.matrix[:n_rows], cell_w=cell_w).split("\n")
+        names = self.rows[:n_rows]
         out = Text(no_wrap=True, end="")
         for i, line in enumerate(body):
-            out.append(f"{days[i % 7]:<3} ", Style(color=MUTED))
+            pair = " ".join(names[2 * i:2 * i + 2])
+            out.append(f"{pair:<{label_w}}", Style(color=MUTED))
             out.append_text(line)
             out.append("\n")
-        ticks = Text(" " * 4, no_wrap=True, end="")
-        for hr in range(0, hours, 6):
-            ticks.append(f"{hr:02d}h".ljust(cell_w * 6), Style(color=MUTED))
+        plot_w = cols * cell_w
+        ticks = Text(" " * label_w, no_wrap=True, end="")
+        ticks.append("t1", Style(color=MUTED))
+        ticks.append(" " * max(1, plot_w - 5))
+        ticks.append("t49", Style(color=MUTED))
         scale = Text(no_wrap=True, end="")
-        scale.append("low ", Style(color=MUTED))
+        scale.append(" low ", Style(color=MUTED))
         for i in range(5):
             scale.append("█", Style(color=ramp(i / 4, HEAT_RAMP)))
         scale.append(" hi", Style(color=MUTED))
-        ticks.truncate(max(0, w - scale.cell_len - 1))
         out.append_text(ticks)
-        out.append(" " * max(1, w - ticks.cell_len - scale.cell_len))
-        out.append_text(scale)
+        if ticks.cell_len + scale.cell_len <= w:
+            out.append_text(scale)
         return out
 
 
-class FlowChart(_Animated):
-    """Inbound vs outbound flow as overlapping braille area charts."""
+class FlowChart(Widget):
+    """BTC volume per timestep: all transactions vs alerted ones.
 
-    FPS = 6
+    Drawn on one shared scale so the alerted share reads honestly; the
+    all-volume series is filled, the alerted series is a line on top.
+    """
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.inbound, self.outbound = stub_chart.flow_series()
+        self.total: list[float] = []
+        self.alerted: list[float] = []
 
     def render(self) -> Text:
         w, h = self.size.width, self.size.height
         if w < 12 or h < 4:
             return Text("")
+        if not self.total:
+            return no_data("no metadata loaded")
         canvas = Canvas(w, h - 1)
-        shift = self.frame % len(self.inbound)
-        series = [
-            (self.inbound[shift:] + self.inbound[:shift], SALMON),
-            (self.outbound[shift:] + self.outbound[:shift], YELLOW),
-        ]
-        peak = max(max(self.inbound), max(self.outbound)) * 1.1
-        for values, color in series:
+        peak = max(max(self.total), max(self.alerted or [0])) * 1.1 or 1
+        for values, color in ((self.total, SALMON), (self.alerted, YELLOW)):
             n = len(values)
+            if not n:
+                continue
             prev = None
             for x in range(canvas.w):
                 f = x / max(1, canvas.w - 1) * (n - 1)
@@ -275,22 +300,38 @@ class FlowChart(_Animated):
                 prev = y
         out = canvas.to_text()
         out.append("\n")
-        out.append_text(legend([("inbound BTC", SALMON), ("outbound BTC", YELLOW)]))
+        share = sum(self.alerted) / (sum(self.total) or 1)
+        out.append_text(legend([
+            (f"all BTC, peak {max(self.total):,.0f}", SALMON),
+            (f"alerted BTC, {share:.1%} of volume", YELLOW),
+        ]))
         return out
 
 
 class DegreeChart(Widget):
-    """Heavy-tailed degree distribution as spaced columns."""
+    """Transaction-graph degree histogram on a log scale (heavy tail)."""
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.buckets: list[str] = []
+        self.counts: list[int] = []
 
     def render(self) -> Text:
         w, h = self.size.width, self.size.height
         if w < 10 or h < 3:
             return Text("")
-        data = stub_chart.degree_distribution()
-        n = min(len(data), w // 2)
-        body = column_chart(data[:n], h - 1, ramp_stops=(YELLOW, CHROME, ORANGE, SALMON, PINK), gap=True)
+        if not self.counts:
+            return no_data()
+        n = min(len(self.counts), w // 2)
+        heights = [math.log10(1 + c) for c in self.counts[:n]]
+        body = column_chart(heights, h - 1, ramp_stops=(YELLOW, CHROME, ORANGE, SALMON, PINK), gap=True)
         body.append("\n")
-        body.append("1".ljust(n * 2 - 3) + "64+", Style(color=MUTED))
+        first, last = self.buckets[0], self.buckets[n - 1]
+        span = n * 2
+        body.append(first + " " * max(1, span - len(first) - len(last)) + last, Style(color=MUTED))
+        peak = f"max {max(self.counts):,}"
+        if span + len(peak) + 2 <= w:
+            body.append("  " + peak, Style(color=MUTED))
         return body
 
 

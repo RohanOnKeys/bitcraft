@@ -2,8 +2,8 @@
 
 The focus transaction sits in the middle with a pulsing ripple; community
 hubs orbit it slowly, each fanning out to its members. Bright packets run
-along the edges so the graph reads as live flow. Stub data for now (see
-bitcraft/helpers/stub_chart.py); GET /graph/{tx_id} will replace it.
+along the edges so the graph reads as live flow. The layout comes from
+GET /graph/{tx_id} (depth 2); until it loads only the focus is drawn.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from rich.style import Style
 from rich.text import Text
 from textual.widget import Widget
 
-from bitcraft.helpers.stub_chart import StubCluster, StubNetwork, StubNode, stub_network
+from bitcraft.helpers.graph_layout import GraphCluster, GraphLayout, GraphNode
 from bitcraft.providers.models import LinkGraph, ProviderError, Subgraph
 from bitcraft.widgets.chart import (
     CHROME,
@@ -35,7 +35,12 @@ MAX_HUBS = 8
 MAX_MEMBERS = 12
 
 
-def network_from_subgraph(sub: Subgraph, focus_tx: int) -> StubNetwork:
+def focus_only(focus_tx: int | None) -> GraphLayout:
+    """Just the focus node: shown until the real subgraph arrives."""
+    return GraphLayout(focus_tx or 0, [], [GraphNode(0, -1, "focus", 0.0, 0.0, 0.0)], [])
+
+
+def network_from_subgraph(sub: Subgraph, focus_tx: int) -> GraphLayout:
     """Lay a real depth-2 subgraph out as focus -> hubs -> members.
 
     Hubs are the focus's direct neighbours (highest score first), members
@@ -50,14 +55,14 @@ def network_from_subgraph(sub: Subgraph, focus_tx: int) -> StubNetwork:
         adjacency.setdefault(e.target_tx_id, []).append((e.source_tx_id, e.data_source))
 
     hubs = sorted({n for n, _ in adjacency.get(focus_tx, [])}, key=lambda n: -score.get(n, 0.0))[:MAX_HUBS]
-    clusters: list[StubCluster] = []
-    nodes = [StubNode(0, -1, "focus", 0.0, 0.0, score.get(focus_tx, 0.0))]
+    clusters: list[GraphCluster] = []
+    nodes = [GraphNode(0, -1, "focus", 0.0, 0.0, score.get(focus_tx, 0.0))]
     edges: list[tuple[int, int, str]] = []
     placed = {focus_tx: 0}
     for c, hub in enumerate(hubs):
         angle = 2 * math.pi * c / max(1, len(hubs))
-        clusters.append(StubCluster(community.get(hub) or 0, angle, round(score.get(hub, 0.0), 2), 0))
-        hub_node = StubNode(len(nodes), c, "hub", 0.0, 0.0, score.get(hub, 0.0))
+        clusters.append(GraphCluster(community.get(hub) or 0, angle, round(score.get(hub, 0.0), 2), 0))
+        hub_node = GraphNode(len(nodes), c, "hub", 0.0, 0.0, score.get(hub, 0.0))
         nodes.append(hub_node)
         placed[hub] = hub_node.node_id
         edges.append((0, hub_node.node_id, "hub"))
@@ -65,7 +70,7 @@ def network_from_subgraph(sub: Subgraph, focus_tx: int) -> StubNetwork:
         members = [n for n, _ in adjacency.get(hub, []) if n not in placed][:MAX_MEMBERS]
         clusters[c].size = len(members)
         for m, member in enumerate(members):
-            node = StubNode(
+            node = GraphNode(
                 len(nodes), c, "member",
                 2 * math.pi * m / max(1, len(members)), 0.6 + 0.4 * ((m * 7) % 5) / 4,
                 score.get(member, 0.0),
@@ -80,10 +85,10 @@ def network_from_subgraph(sub: Subgraph, focus_tx: int) -> StubNetwork:
         if a is not None and b is not None and (a, b) not in tree:
             edges.append((a, b, "bridge"))
             tree |= {(a, b), (b, a)}
-    return StubNetwork(focus_tx, clusters, nodes, edges)
+    return GraphLayout(focus_tx, clusters, nodes, edges)
 
 
-def network_from_link_graph(graph: LinkGraph) -> StubNetwork:
+def network_from_link_graph(graph: LinkGraph) -> GraphLayout:
     """Lay a wallet link graph out as wallet -> transactions -> addresses/IPs.
 
     The wallet is the focus, its riskiest transactions are hubs, and each
@@ -96,13 +101,13 @@ def network_from_link_graph(graph: LinkGraph) -> StubNetwork:
     for e in graph.edges:
         neighbours.setdefault(e.source, []).append(e.target)
         neighbours.setdefault(e.target, []).append(e.source)
-    clusters: list[StubCluster] = []
-    nodes = [StubNode(0, -1, "focus", 0.0, 0.0, (root.score or 0.0) if root else 0.0)]
+    clusters: list[GraphCluster] = []
+    nodes = [GraphNode(0, -1, "focus", 0.0, 0.0, (root.score or 0.0) if root else 0.0)]
     edges: list[tuple[int, int, str]] = []
     placed: dict[str, int] = {root.id: 0} if root else {}
     for c, tx in enumerate(txs):
-        clusters.append(StubCluster(0, 2 * math.pi * c / max(1, len(txs)), round(tx.score or 0.0, 2), 0, label=tx.label))
-        hub = StubNode(len(nodes), c, "hub", 0.0, 0.0, tx.score or 0.0)
+        clusters.append(GraphCluster(0, 2 * math.pi * c / max(1, len(txs)), round(tx.score or 0.0, 2), 0, label=tx.label))
+        hub = GraphNode(len(nodes), c, "hub", 0.0, 0.0, tx.score or 0.0)
         nodes.append(hub)
         placed[tx.id] = hub.node_id
         edges.append((0, hub.node_id, "hub"))
@@ -112,7 +117,7 @@ def network_from_link_graph(graph: LinkGraph) -> StubNetwork:
         for m, member_id in enumerate(members):
             member = by_id[member_id]
             risk = 0.9 if member.kind == "ip" else 0.5
-            node = StubNode(len(nodes), c, "member", 2 * math.pi * m / max(1, len(members)),
+            node = GraphNode(len(nodes), c, "member", 2 * math.pi * m / max(1, len(members)),
                             0.6 + 0.4 * ((m * 7) % 5) / 4, risk)
             nodes.append(node)
             placed[member_id] = node.node_id
@@ -125,7 +130,7 @@ def network_from_link_graph(graph: LinkGraph) -> StubNetwork:
             edges.append((a, b, "bridge"))
             tree |= {(a, b), (b, a)}
     label = root.label if root else "wallet"
-    return StubNetwork(0, clusters, nodes, edges, focus_label=label)
+    return GraphLayout(0, clusters, nodes, edges, focus_label=label)
 ROTATE_PER_FRAME = 0.0035
 PACKET_FRAMES = 26
 
@@ -152,11 +157,7 @@ class GraphView(Widget):
         self.elliptic_tx_id = elliptic_tx_id
         self._labels = labels
         self._frame = 0
-        self._net: StubNetwork = stub_network(
-            focus_tx=elliptic_tx_id or 10000021,
-            n_clusters=clusters,
-            seed=(elliptic_tx_id or 7) % 97,
-        )
+        self._net: GraphLayout = focus_only(elliptic_tx_id)
 
     def on_mount(self) -> None:
         self.set_interval(1 / FPS, self._tick)
@@ -178,7 +179,7 @@ class GraphView(Widget):
 
         self.run_worker(work, thread=True, exclusive=True, group="subgraph")
 
-    def _apply(self, tx_id: int, net: StubNetwork) -> None:
+    def _apply(self, tx_id: int, net: GraphLayout) -> None:
         if tx_id == self.elliptic_tx_id:
             self._net = net
             self.refresh()
@@ -187,22 +188,18 @@ class GraphView(Widget):
         self._frame += 1
         self.refresh()
 
-    def set_network(self, net: StubNetwork) -> None:
+    def set_network(self, net: GraphLayout) -> None:
         """Show a prepared network (e.g. a wallet link graph); no fetching."""
         self.elliptic_tx_id = None
         self._net = net
         self.refresh()
 
     def set_focus_tx(self, tx_id: int | None) -> None:
-        """Rebuild the stub neighbourhood around a new transaction."""
+        """Show a new focus transaction and load its real neighbourhood."""
         if tx_id == self.elliptic_tx_id:
             return
         self.elliptic_tx_id = tx_id
-        self._net = stub_network(
-            focus_tx=tx_id or 10000021,
-            n_clusters=max(1, len(self._net.clusters)),
-            seed=(tx_id or 7) % 97,
-        )
+        self._net = focus_only(tx_id)
         self.refresh()
         if tx_id is not None and self.is_mounted:
             self._load(tx_id)
