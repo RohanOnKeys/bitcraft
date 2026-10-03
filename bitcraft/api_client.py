@@ -86,6 +86,10 @@ class ApiClient:
         """GET /stats/summary."""
         return self.get("/stats/summary")
 
+    def get_stats_charts(self) -> dict:
+        """GET /stats/charts."""
+        return self.get("/stats/charts")
+
     def get_pipeline_status(self) -> dict:
         """GET /pipeline/status."""
         return self.get("/pipeline/status")

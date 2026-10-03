@@ -17,6 +17,10 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
   `/metadata`, `/pipeline/metrics`; optional Redis cache.
 - TUI reads the live API: dashboard, threats, graph explorer, wallets and
   alert detail; frogs only on the splash and boot screens.
+- Every chart shows real data: KPI and graph-stat sparklines per timestep,
+  BTC volume (all vs alerted), suspicious traffic by country and timestep,
+  degree distribution, all from `GET /stats/charts`; the stub chart module
+  is gone. Dashboard triage marks with `m`.
 - `bitcraft` CLI opens a sized terminal window; the installable package is
   `bitcraft` (wheel verified in a clean environment); pip and Chocolatey
   packaging; air-gapped Linux bundle (`packages/offline_bundle.py`);
@@ -41,7 +45,7 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
 
 ## Current verification status
 
-- Tests: 82 passed (`python -m pytest tests`).
+- Tests: 88 passed (`python -m pytest tests`).
 - Linux: `docker compose up --build` verified end to end (pipeline in a
   Linux container, PostgreSQL load in 66 s, API serving the TUI); results
   identical to the Windows run.

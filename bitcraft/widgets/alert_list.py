@@ -15,7 +15,7 @@ class AlertList(DataTable):
     def on_mount(self) -> None:
         self.cursor_type = "row"
         self.zebra_stripes = True
-        self.add_columns(
+        *_, self._triage_key = self.add_columns(
             "rank",
             "tx",
             "sev",
@@ -27,6 +27,12 @@ class AlertList(DataTable):
             "triage",
         )
         self.refresh_from_store()
+
+    def show_triage(self, tx_id: int) -> None:
+        """Redraw one row's triage cell (R reviewed, E escalate, D dismiss)."""
+        triage = self.app.store.triage.get(tx_id)
+        mark = triage.status[0].upper() if triage and triage.status != "unmarked" else ""
+        self.update_cell(str(tx_id), self._triage_key, mark)
 
     def refresh_from_store(self) -> None:
         """Reload rows from store.alert_page."""

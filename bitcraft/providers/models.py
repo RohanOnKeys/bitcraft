@@ -296,3 +296,26 @@ class LinkEdge:
 class LinkGraph:
     nodes: list[LinkNode]
     edges: list[LinkEdge]
+
+
+@dataclass(frozen=True)
+class StatsCharts:
+    """Chart series (mirrors GET /stats/charts).
+
+    Per-timestep lists align with `timesteps`; metadata-layer series are
+    empty when no metadata was loaded.
+    """
+
+    timesteps: list[int] = field(default_factory=list)
+    transactions: list[int] = field(default_factory=list)
+    alerts: list[int] = field(default_factory=list)
+    critical: list[int] = field(default_factory=list)
+    labeled: list[int] = field(default_factory=list)
+    network: list[int] = field(default_factory=list)
+    stage_seconds: dict[str, float] = field(default_factory=dict)
+    degree_buckets: list[str] = field(default_factory=list)
+    degree_counts: list[int] = field(default_factory=list)
+    flow_all_btc: list[float] = field(default_factory=list)
+    flow_alerted_btc: list[float] = field(default_factory=list)
+    country_rows: list[str] = field(default_factory=list)
+    country_matrix: list[list[int]] = field(default_factory=list)

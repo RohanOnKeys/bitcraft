@@ -28,6 +28,7 @@ from bitcraft.providers.models import (
     PipelineStatus,
     ProviderError,
     ShapReason,
+    StatsCharts,
     StatsSummary,
     Subgraph,
     ThreatOverview,
@@ -235,6 +236,40 @@ class DemoProvider:
             labeled_coverage_pct=LABELED_COVERAGE_PCT,
             network_coverage_pct=NETWORK_COVERAGE_PCT,
             full_stack_coverage_pct=FULL_STACK_COVERAGE_PCT,
+        )
+
+    def stats_charts(self) -> StatsCharts:
+        """Seeded series in the shape GET /stats/charts returns.
+
+        Alert and critical counts come from the demo alerts; the rest is
+        generated around the plan's coverage numbers.
+        """
+        self._sleep()
+        rng = random.Random(self._seed + 7)
+        steps = list(range(1, 50))
+        alerts = {t: 0 for t in steps}
+        critical = {t: 0 for t in steps}
+        for row in self._alerts:
+            if row.timestep in alerts:
+                alerts[row.timestep] += 1
+                critical[row.timestep] += row.severity == "critical"
+        per_step = [int(TOTAL_TRANSACTIONS / 49 * rng.uniform(0.6, 1.4)) for _ in steps]
+        countries = ["US", "DE", "NL", "RU", "GB", "SG", "BR", "IN"]
+        return StatsCharts(
+            timesteps=steps,
+            transactions=per_step,
+            alerts=[alerts[t] for t in steps],
+            critical=[critical[t] for t in steps],
+            labeled=[int(n * LABELED_COVERAGE_PCT / 100 * rng.uniform(0.7, 1.3)) for n in per_step],
+            network=[int(n * NETWORK_COVERAGE_PCT / 100 * rng.uniform(0.7, 1.3)) for n in per_step],
+            stage_seconds={"load": 11.0, "graph": 0.3, "features": 0.8, "anomaly": 10.0,
+                           "risk_model": 17.0, "metadata": 88.0, "fusion": 0.7, "explain": 6.6, "write": 4.1},
+            degree_buckets=[str(d) for d in range(1, 16)] + ["16+"],
+            degree_counts=[int(90_000 / d ** 1.8) + rng.randint(0, 50) for d in range(1, 17)],
+            flow_all_btc=[round(rng.uniform(800, 6000), 2) for _ in steps],
+            flow_alerted_btc=[round(rng.uniform(0, 1) ** 3 * 600, 2) for _ in steps],
+            country_rows=countries,
+            country_matrix=[[rng.randint(0, 30 - 3 * i) for _ in steps] for i in range(len(countries))],
         )
 
     def pipeline_status(self) -> PipelineStatus:

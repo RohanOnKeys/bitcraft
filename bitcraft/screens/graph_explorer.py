@@ -1,7 +1,8 @@
 """Graph explorer: connectivity graph plus supporting chart panels.
 
-Stub data throughout (bitcraft/helpers/stub_chart.py) until the graph endpoints
-land; the layout and widgets are the real ones.
+Every panel reads the store: the focus subgraph (GET /graph/{tx_id}), the
+threat overview, the riskiest communities, the current alert page and the
+chart series (GET /stats/charts). Panels stay empty until their data loads.
 """
 
 from __future__ import annotations
@@ -11,7 +12,6 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Static
 
-from bitcraft.helpers import stub_chart
 from bitcraft.widgets.chart_panel import (
     CommunityBars,
     DegreeChart,
@@ -42,37 +42,11 @@ class GraphExplorerScreen(Screen):
                     yield GraphView(id="graph-view")
                     yield Static(graph_legend(), id="graph-legend")
                 with Vertical(id="graph-side"):
-                    yield StatTiles(
-                        [
-                            ("nodes", "2,184", stub_chart.alerts_by_timestep(1), YELLOW),
-                            ("edges", "6,911", stub_chart.alerts_by_timestep(2), CHROME),
-                            ("communities", "41", stub_chart.alerts_by_timestep(4), ORANGE),
-                            ("density", "0.0029", stub_chart.alerts_by_timestep(6), SALMON),
-                            ("max degree", "412", stub_chart.degree_distribution(), PINK),
-                        ],
-                        id="graph-stats",
-                        classes="panel",
-                    )
-                    yield DonutChart(
-                        [(n, v, c) for (n, v), c in zip(
-                            stub_chart.driver_mix(), (SALMON, CHROME, PINK)
-                        )],
-                        label="0.87",
-                        sublabel="score",
-                        id="graph-drivers",
-                        classes="panel",
-                    )
+                    yield StatTiles([], id="graph-stats", classes="panel")
+                    yield DonutChart([], sublabel="mean", id="graph-drivers", classes="panel")
             with Horizontal(id="graph-bottom"):
                 yield TimestepChart(id="graph-timeline", classes="panel")
-                yield DonutChart(
-                    [(n, v, c) for (n, v), c in zip(
-                        stub_chart.score_mix(), (CRIMSON, ORANGE, YELLOW, MUTED)
-                    )],
-                    label="4,483",
-                    sublabel="alerts",
-                    id="graph-severity",
-                    classes="panel",
-                )
+                yield DonutChart([], sublabel="alerts", id="graph-severity", classes="panel")
                 yield CommunityBars(id="graph-communities", classes="panel")
             with Horizontal(id="graph-bottom-2"):
                 yield FlowChart(id="graph-flow", classes="panel")
@@ -88,9 +62,9 @@ class GraphExplorerScreen(Screen):
             "#graph-timeline": "alerts per timestep",
             "#graph-severity": "severity mix",
             "#graph-communities": "riskiest communities",
-            "#graph-flow": "BTC flow · focus neighbourhood",
-            "#graph-heatmap": "activity · weekday x hour (UTC)",
-            "#graph-degree": "degree distribution",
+            "#graph-flow": "BTC volume per timestep · all vs alerted",
+            "#graph-heatmap": "suspicious traffic · source country x timestep",
+            "#graph-degree": "degree distribution (log scale)",
         }
         for selector, title in titles.items():
             self.query_one(selector).border_title = title
@@ -141,18 +115,31 @@ class GraphExplorerScreen(Screen):
             self.query_one("#graph-communities", CommunityBars).rows = [
                 (f"C{c.community_id}", float(c.illicit_ratio), c.size) for c in ranked[:8]
             ]
+        charts = store.charts
         if stats is not None:
-            trend = per_ts or stub_chart.alerts_by_timestep(1)
+            # Each tile's sparkline is that measure per timestep, t1 to t49.
+            def series(name: str) -> list[float]:
+                return [float(v) for v in getattr(charts, name, [])] if charts else []
+
             crit = threat.critical_count if threat is not None else 0
             self.query_one("#graph-stats", StatTiles).stats = [
-                ("transactions", f"{stats.total_transactions:,}", trend, YELLOW),
-                ("alerts", f"{stats.total_alerts:,}", trend, CHROME),
-                ("critical", f"{crit:,}", trend, ORANGE),
-                ("labeled", f"{stats.labeled_coverage_pct:.1f}%", trend, SALMON),
-                ("network cov.", f"{stats.network_coverage_pct:.1f}%", trend, PINK),
+                ("transactions", f"{stats.total_transactions:,}", series("transactions"), YELLOW),
+                ("alerts", f"{stats.total_alerts:,}", series("alerts"), CHROME),
+                ("critical", f"{crit:,}", series("critical"), ORANGE),
+                ("labeled", f"{stats.labeled_coverage_pct:.1f}%", series("labeled"), SALMON),
+                ("network cov.", f"{stats.network_coverage_pct:.1f}%", series("network"), PINK),
             ]
+        if charts is not None:
+            flow = self.query_one("#graph-flow", FlowChart)
+            flow.total, flow.alerted = list(charts.flow_all_btc), list(charts.flow_alerted_btc)
+            heat = self.query_one("#graph-heatmap", HeatmapChart)
+            heat.rows = list(charts.country_rows)
+            heat.matrix = [[float(v) for v in row] for row in charts.country_matrix]
+            degree = self.query_one("#graph-degree", DegreeChart)
+            degree.buckets, degree.counts = list(charts.degree_buckets), list(charts.degree_counts)
         for selector in ("#graph-timeline", "#graph-severity", "#graph-drivers",
-                         "#graph-communities", "#graph-stats"):
+                         "#graph-communities", "#graph-stats", "#graph-flow",
+                         "#graph-heatmap", "#graph-degree"):
             self.query_one(selector).refresh()
 
     def on_resize(self, event) -> None:  # type: ignore[no-untyped-def]
@@ -161,7 +148,7 @@ class GraphExplorerScreen(Screen):
     def _sync_focus(self) -> None:
         tx = self.app.store.selected_tx_id
         self.query_one("#graph-view", GraphView).set_focus_tx(tx)
-        self.query_one("#graph-main").border_subtitle = f"tx {tx or 10000021}"
+        self.query_one("#graph-main").border_subtitle = f"tx {tx}" if tx else "no alert selected"
 
     def _fit(self) -> None:
         w, h = self.size.width, self.size.height

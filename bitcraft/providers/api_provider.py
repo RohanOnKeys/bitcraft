@@ -30,6 +30,7 @@ from bitcraft.providers.models import (
     PipelineStatus,
     ProviderError,
     ShapReason,
+    StatsCharts,
     StatsSummary,
     Subgraph,
     ThreatOverview,
@@ -178,6 +179,30 @@ class ApiProvider:
             labeled_coverage_pct=float(data["labeled_coverage_pct"]),
             network_coverage_pct=float(data["network_coverage_pct"]),
             full_stack_coverage_pct=float(data["full_stack_coverage_pct"]),
+        )
+
+    def stats_charts(self) -> StatsCharts:
+        """GET /stats/charts; empty series when the endpoint is unavailable."""
+        try:
+            data = self._call(self._client.get_stats_charts)
+        except ProviderError:
+            return StatsCharts()
+        ints = lambda key: [int(v) for v in data.get(key) or []]  # noqa: E731
+        floats = lambda key: [float(v) for v in data.get(key) or []]  # noqa: E731
+        return StatsCharts(
+            timesteps=ints("timesteps"),
+            transactions=ints("transactions"),
+            alerts=ints("alerts"),
+            critical=ints("critical"),
+            labeled=ints("labeled"),
+            network=ints("network"),
+            stage_seconds={str(k): float(v) for k, v in (data.get("stage_seconds") or {}).items()},
+            degree_buckets=[str(b) for b in data.get("degree_buckets") or []],
+            degree_counts=ints("degree_counts"),
+            flow_all_btc=floats("flow_all_btc"),
+            flow_alerted_btc=floats("flow_alerted_btc"),
+            country_rows=[str(c) for c in data.get("country_rows") or []],
+            country_matrix=[[int(v) for v in row] for row in data.get("country_matrix") or []],
         )
 
     def pipeline_status(self) -> PipelineStatus:

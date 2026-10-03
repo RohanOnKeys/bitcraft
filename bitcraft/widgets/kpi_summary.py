@@ -8,20 +8,38 @@ from textual.containers import Horizontal
 from textual.widget import Widget
 from textual.widgets import Static
 
-from bitcraft.helpers import stub_chart
 from bitcraft.helpers.format import format_int, format_pct
 from bitcraft.widgets.chart import sparkline
 
-# Stub 16-point trends under each KPI until the API serves history.
-_TREND = stub_chart.alerts_by_timestep
-SPARK_SERIES = {
-    "#kpi-tx": _TREND(21)[:16],
-    "#kpi-alerts": _TREND(22)[18:34],
-    "#kpi-critical": _TREND(3)[18:34],
-    "#kpi-labeled": _TREND(24)[:16],
-    "#kpi-network": _TREND(25)[30:46],
-    "#kpi-pipeline": _TREND(26)[8:24],
-}
+# Points per KPI sparkline; longer series are averaged into this many buckets.
+SPARK_POINTS = 16
+
+
+def bucket_means(values, n: int = SPARK_POINTS) -> list[float]:
+    """Average a series into at most n equal buckets, keeping its shape."""
+    values = [float(v) for v in values]
+    if len(values) <= n:
+        return values
+    out = []
+    for i in range(n):
+        chunk = values[i * len(values) // n:(i + 1) * len(values) // n]
+        out.append(sum(chunk) / len(chunk))
+    return out
+
+
+def spark_series(charts) -> dict[str, list[float]]:
+    """Sparkline under each KPI: its count per timestep (1 to 49), and the
+    pipeline's seconds per stage. Empty when the charts are not loaded."""
+    if charts is None:
+        return {}
+    return {
+        "#kpi-tx": bucket_means(charts.transactions),
+        "#kpi-alerts": bucket_means(charts.alerts),
+        "#kpi-critical": bucket_means(charts.critical),
+        "#kpi-labeled": bucket_means(charts.labeled),
+        "#kpi-network": bucket_means(charts.network),
+        "#kpi-pipeline": bucket_means(charts.stage_seconds.values()),
+    }
 
 
 class KpiSummary(Widget):
@@ -45,11 +63,13 @@ class KpiSummary(Widget):
         stats = store.stats
         threat = store.threat_overview
         pipeline = store.pipeline
+        series = spark_series(store.charts)
 
         def set_cell(cid: str, value: str, label: str, extra_class: str | None = None) -> None:
             cell = self.query_one(cid, Static)
             text = Text.from_markup(f"{value}\n[#8a8078]{label}[/]\n")
-            text.append_text(sparkline(SPARK_SERIES[cid]))
+            if series.get(cid):
+                text.append_text(sparkline(series[cid]))
             text.justify = "center"
             cell.update(text)
             if extra_class:
