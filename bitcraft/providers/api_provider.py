@@ -352,45 +352,20 @@ class ApiProvider:
         ]
 
     def threat_overview(self) -> ThreatOverview:
-        """GET /threats/overview, else approximate from the alerts page."""
-        try:
-            data = self._call(self._client.get_threat_overview)
-            return ThreatOverview(
-                critical_count=int(data["critical_count"]),
-                high_count=int(data["high_count"]),
-                medium_count=int(data["medium_count"]),
-                low_count=int(data["low_count"]),
-                no_network_evidence_count=int(data["no_network_evidence_count"]),
-                high_illicit_community_count=int(data["high_illicit_community_count"]),
-                alerts_per_timestep={
-                    int(k): int(v) for k, v in (data.get("alerts_per_timestep") or {}).items()
-                }
-                or None,
-            )
-        except ProviderError:
-            pass
-        page = self.alerts(AlertQuery(offset=0, limit=500))
-        crit = high = med = low = no_net = 0
-        for row in page.items:
-            tier = row.severity or severity_for_score(row.composite_score)
-            if tier == "critical":
-                crit += 1
-            elif tier == "high":
-                high += 1
-            elif tier == "medium":
-                med += 1
-            else:
-                low += 1
-            if not row.has_network_layer:
-                no_net += 1
+        """GET /threats/overview. Errors propagate: totals are never guessed
+        from a partial alert page."""
+        data = self._call(self._client.get_threat_overview)
         return ThreatOverview(
-            critical_count=crit,
-            high_count=high,
-            medium_count=med,
-            low_count=low,
-            no_network_evidence_count=no_net,
-            high_illicit_community_count=0,
-            alerts_per_timestep=None,
+            critical_count=int(data["critical_count"]),
+            high_count=int(data["high_count"]),
+            medium_count=int(data["medium_count"]),
+            low_count=int(data["low_count"]),
+            no_network_evidence_count=int(data["no_network_evidence_count"]),
+            high_illicit_community_count=int(data["high_illicit_community_count"]),
+            alerts_per_timestep={
+                int(k): int(v) for k, v in (data.get("alerts_per_timestep") or {}).items()
+            }
+            or None,
         )
 
     def wallets(self, offset: int = 0, limit: int = 100) -> WalletPage:

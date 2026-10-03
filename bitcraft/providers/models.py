@@ -1,7 +1,7 @@
 """Shared data models for TUI providers.
 
-Field names match backend/app/schemas exactly. Optional fields the backend
-does not yet expose are marked as extensions (see plans/future.md).
+Field names match backend/app/schemas exactly. Optional fields are None
+when a row has no value (for example, no community or no SHAP reasons).
 """
 
 from __future__ import annotations
@@ -68,7 +68,6 @@ class AlertSummary:
     rank: int
     has_synthetic_layer: bool
     has_network_layer: bool
-    # extension, see future.md
     timestep: Optional[int] = None
     community_id: Optional[int] = None
     severity: Optional[SeverityTier] = None
@@ -78,10 +77,7 @@ class AlertSummary:
 
 @dataclass(frozen=True)
 class EvidenceItem:
-    """One structured evidence row with provenance.
-
-    extension, see future.md: backend currently returns only evidence_text.
-    """
+    """One structured evidence row, tagged real or modeled."""
 
     label: str
     value: str
@@ -112,7 +108,6 @@ class AlertDetail:
     has_network_layer: bool
     evidence_text: str
     shap_reasons: Optional[list[ShapReason]] = None
-    # extension, see future.md
     timestep: Optional[int] = None
     community_id: Optional[int] = None
     severity: Optional[SeverityTier] = None
@@ -182,11 +177,7 @@ class CommunityDetail:
 
 @dataclass(frozen=True)
 class ThreatOverview:
-    """Aggregates for the threat detection screen.
-
-    extension, see future.md: no dedicated backend endpoint yet; DemoProvider
-    synthesizes this, ApiProvider may approximate from available endpoints.
-    """
+    """Aggregates for the threat detection screen (GET /threats/overview)."""
 
     critical_count: int
     high_count: int

@@ -11,7 +11,7 @@ from textual.widgets import Footer, Static
 
 from bitcraft.helpers.format import network_cell
 from bitcraft.helpers.severity import severity_for_score
-from bitcraft.providers.demo_provider import (
+from bitcraft.helpers.drivers import (
     ANOMALY_WEIGHT,
     COMMUNITY_WEIGHT,
     MODEL_WEIGHT,

@@ -38,6 +38,22 @@ def test_bucket_means_keeps_shape() -> None:
     assert spark_series(None) == {}
 
 
+def test_driver_weights_match_pipeline_config() -> None:
+    """The TUI splits scores with the same weights the pipeline fuses with."""
+    from pathlib import Path
+
+    import yaml
+
+    from bitcraft.helpers import drivers
+
+    config = Path(__file__).resolve().parents[2] / "ml" / "config.yaml"
+    fusion = yaml.safe_load(config.read_text(encoding="utf-8"))["score_fusion"]
+    assert drivers.MODEL_WEIGHT == fusion["risk_model_weight"]
+    assert drivers.ANOMALY_WEIGHT == fusion["anomaly_score_weight"]
+    assert drivers.COMMUNITY_WEIGHT == fusion["community_illicit_ratio_weight"]
+    assert drivers.NETWORK_WEIGHT == fusion["network_ip_signal_weight"]
+
+
 def test_demo_charts_align_with_timesteps() -> None:
     provider = DemoProvider(simulate_latency=False)
     charts = provider.stats_charts()

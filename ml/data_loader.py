@@ -243,9 +243,7 @@ def load_known_ranges(reference_path: Path) -> pd.DataFrame:
     """Load a reference table of known Tor-exit and hosting-provider ASNs.
 
     Expected columns: asn, category (one of "tor_exit", "hosting_provider").
-    Path and schema are not yet part of the repository structure in
-    plans/plan.md section 12; this is a placeholder for the Stage 0
-    reference data described in section 5.
+    The shipped list is ml/references/known_range.csv.
     """
     return pd.read_csv(reference_path)
 
