@@ -38,8 +38,9 @@ Status as of this push. Update before every push per RULE-WORKFLOW-001.
   `ml/references/dataset_manifest.json`); `python -m ml.synthetic`
   generates a fully synthetic dataset with no download.
 
-- Released: `bitcraft` 0.1.3 on PyPI (<https://pypi.org/project/bitcraft/>)
-  and GitHub release `v0.1.3` with the dataset archives; README is the PyPI
+- Released: `bitcraft` 0.1.4 on PyPI (<https://pypi.org/project/bitcraft/>)
+  and GitHub release `v0.1.4` (real data in every chart, triage marks);
+  the dataset archives stay on release `v0.1.3`; README is the PyPI
   description; author credits corrected (Jagadish Prasad Pattanaik,
   Ashutosh Badapanda); dataset sources credited in `datasets/NOTICE`.
 
