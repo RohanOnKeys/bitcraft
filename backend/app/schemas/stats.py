@@ -23,3 +23,25 @@ class ThreatOverview(BaseModel):
     no_network_evidence_count: int
     high_illicit_community_count: int
     alerts_per_timestep: dict[int, int]
+
+
+class StatsCharts(BaseModel):
+    """Series behind the dashboard sparklines and graph explorer charts.
+
+    Per-timestep lists align with `timesteps`. The metadata-layer fields
+    are empty when no metadata was loaded.
+    """
+
+    timesteps: list[int]
+    transactions: list[int]
+    alerts: list[int]
+    critical: list[int]
+    labeled: list[int]
+    network: list[int]
+    stage_seconds: dict[str, float]
+    degree_buckets: list[str]
+    degree_counts: list[int]
+    flow_all_btc: list[float]
+    flow_alerted_btc: list[float]
+    country_rows: list[str]
+    country_matrix: list[list[int]]

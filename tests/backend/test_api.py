@@ -56,3 +56,19 @@ def test_stats_threats_pipeline(client) -> None:
     assert tiers == 44 and threats["alerts_per_timestep"]
     assert client.get("/pipeline/status").json()["status"] == "complete"
     assert "precision_at_k" in client.get("/pipeline/metrics").json()
+
+
+def test_stats_charts(client) -> None:
+    charts = client.get("/stats/charts").json()
+    n = len(charts["timesteps"])
+    for name in ("transactions", "alerts", "critical", "labeled", "network"):
+        assert len(charts[name]) == n, name
+    assert sum(charts["transactions"]) == 2000
+    assert sum(charts["alerts"]) == 44
+    # Isolated transactions (degree 0) are not part of the degree histogram.
+    assert 0 < sum(charts["degree_counts"]) <= 2000
+    assert len(charts["degree_buckets"]) == len(charts["degree_counts"])
+    assert charts["stage_seconds"]
+    assert len(charts["flow_all_btc"]) == n
+    assert sum(charts["flow_alerted_btc"]) <= sum(charts["flow_all_btc"])
+    assert all(len(row) == n for row in charts["country_matrix"])
